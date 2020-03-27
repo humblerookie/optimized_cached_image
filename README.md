@@ -1,5 +1,7 @@
 # Optimized Cached Image
 
+[![pub package](https://img.shields.io/pub/v/optimized_cached_image.svg)](https://pub.dartlang.org/packages/optimized_cached_image)
+
 A flutter library for loading images from network, resizing and caching them for memory sensitivity. 
 This resizes and stores the images in cache based on parent container constraints and hence
 loads images of lower size into memory. This is heavily inspired by [cached_network_image](https://pub.dev/packages/cached_network_image) library.
@@ -12,7 +14,7 @@ A flutter library to show images from the internet and keep them in the cache di
 
 ## How to use
 The CachedNetworkImage can be used directly or through the ImageProvider.
-~~~~
+
 ```dart
 OptimizedCacheImage(
         imageUrl: "http://via.placeholder.com/350x150",

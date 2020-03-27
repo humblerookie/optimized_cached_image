@@ -1,3 +1,7 @@
+## 0.1.1
+
+* Updated examples.
+
 ## 0.1.0
 
 * Minimalist/Core functionality of the library and health fixes.

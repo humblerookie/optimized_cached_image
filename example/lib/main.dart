@@ -27,19 +27,15 @@ class _MyAppState extends State<MyApp> {
               // the following Image will have width its dimensions on disk = width of device
               // You don't need to specify width/height explicitly the widget automatically
               // detects it based on its parent's constraints.
-
-              Container(
-                width: 100,
-                child: OptimizedCacheImage(
-                  imageUrl:
-                      "https://grist.files.wordpress.com/2019/07/ocean1.jpg",
-                ),
+              OptimizedCacheImage(
+                imageUrl:
+                "https://grist.files.wordpress.com/2019/07/ocean1.jpg",
               ),
               SizedBox(
                 height: 50,
               ),
               Text("This is via the provider: OptimizedCacheImageProvider"),
-              //OptimizedCacheImageProvider however needs cacheWidth or/and cacheHeight to resize images
+              //Unlike OptimizedCacheImage, OptimizedCacheImageProvider needs cacheWidth or/and cacheHeight to resize images
               Image(
                 image: OptimizedCacheImageProvider(
                     "https://p.bigstockphoto.com/rwyznvNQ76U2liDFDH6g_bigstock-Yachts-In-City-Bay-At-Hot-Summ-283784740.jpg",
