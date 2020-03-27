@@ -29,7 +29,7 @@ class _MyAppState extends State<MyApp> {
               // detects it based on its parent's constraints.
               OptimizedCacheImage(
                 imageUrl:
-                "https://grist.files.wordpress.com/2019/07/ocean1.jpg",
+                    "https://grist.files.wordpress.com/2019/07/ocean1.jpg",
               ),
               SizedBox(
                 height: 50,

@@ -65,7 +65,7 @@ To instantiate:
 ```
 ImageCacheManager(ImageCacheConfig(cacheConfig:ImageCacheConfig(widthKey:"custom-width", heightKey:"custom-height"))
 ```
-For detailed usage about all the params check out the [parent project] (https://github.com/Baseflow/flutter_cached_network_image/blob/develop/example/lib/main.dart) from which this was ported.
+For detailed usage about all the params check out the [parent project](https://github.com/Baseflow/flutter_cached_network_image/blob/develop/example/lib/main.dart) from which this was ported.
 
 ## TODO
 This library is a WIP. A few things that are going to be worked on are.

@@ -11,11 +11,12 @@ import 'image_cache_manager.dart';
 
 export 'package:optimized_cached_image/widgets.dart';
 
-typedef void ErrorListener();
-typedef Widget ImageWidgetBuilder(
+typedef ErrorListener = void Function();
+typedef ImageWidgetBuilder = Widget Function(
     BuildContext context, ImageProvider imageProvider);
-typedef Widget PlaceholderWidgetBuilder(BuildContext context, String url);
-typedef Widget LoadingErrorWidgetBuilder(
+typedef PlaceholderWidgetBuilder = Widget Function(
+    BuildContext context, String url);
+typedef LoadingErrorWidgetBuilder = Widget Function(
     BuildContext context, String url, Object error);
 
 ///
@@ -155,20 +156,20 @@ class OptimizedCacheImage extends StatefulWidget {
       this.imageBuilder,
       this.placeholder,
       this.placeholderFadeInDuration,
-      this.fadeOutDuration: const Duration(milliseconds: 1000),
-      this.fadeOutCurve: Curves.easeOut,
-      this.fadeInDuration: const Duration(milliseconds: 500),
-      this.fadeInCurve: Curves.easeIn,
+      this.fadeOutDuration = const Duration(milliseconds: 1000),
+      this.fadeOutCurve = Curves.easeOut,
+      this.fadeInDuration = const Duration(milliseconds: 500),
+      this.fadeInCurve = Curves.easeIn,
       this.width,
       this.height,
-      this.alignment: Alignment.center,
-      this.repeat: ImageRepeat.noRepeat,
-      this.matchTextDirection: false,
+      this.alignment = Alignment.center,
+      this.repeat = ImageRepeat.noRepeat,
+      this.matchTextDirection = false,
       this.httpHeaders,
-      this.useOldImageOnUrlChange: false,
+      this.useOldImageOnUrlChange = false,
       this.color,
       this.colorBlendMode,
-      this.filterQuality: FilterQuality.low})
+      this.filterQuality = FilterQuality.low})
       : assert(imageUrl != null),
         assert(fadeOutDuration != null),
         assert(fadeOutCurve != null),
@@ -197,7 +198,7 @@ class _ImageTransitionHolder {
     this.image,
     @required this.animationController,
     this.error,
-    this.curve: Curves.easeIn,
+    this.curve = Curves.easeIn,
   }) : forwardTickerFuture = animationController.forward();
 
   dispose() {
@@ -418,7 +419,7 @@ class OptimizedCacheImageProvider
   /// Creates an ImageProvider which loads an image from the [url], using the [scale].
   /// When the image fails to load [errorListener] is called.
   OptimizedCacheImageProvider(this.url,
-      {this.scale: 1.0,
+      {this.scale = 1.0,
       this.errorListener,
       this.headers,
       int cacheWidth,

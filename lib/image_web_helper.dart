@@ -2,9 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+// ignore: implementation_imports
 import 'package:flutter_cache_manager/src/cache_object.dart';
+// ignore: implementation_imports
 import 'package:flutter_cache_manager/src/cache_store.dart';
+// ignore: implementation_imports
 import 'package:flutter_cache_manager/src/file_fetcher.dart';
+// ignore: implementation_imports
 import 'package:flutter_cache_manager/src/file_info.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:http/http.dart' as http;

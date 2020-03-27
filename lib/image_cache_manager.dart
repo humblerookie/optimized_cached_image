@@ -31,7 +31,7 @@ class ImageCacheManager {
     _fileBasePath = getFilePath();
     _maxAgeCacheObject = maxAgeCacheObject;
     _maxNrOfCacheObjects = maxNrOfCacheObjects;
-    store = new CacheStore(
+    store = CacheStore(
         _fileBasePath, _cacheKey, _maxNrOfCacheObjects, _maxAgeCacheObject);
     webHelper = ImageWebHelper(store, null, cacheConfig);
   }
@@ -85,7 +85,7 @@ class ImageCacheManager {
   /// The files are returned as stream. First the cached file if available, when the
   /// cached file is too old the newly downloaded file is returned afterwards.
   Stream<FileInfo> getFile(String url, {Map<String, String> headers}) {
-    var streamController = new StreamController<FileInfo>();
+    var streamController = StreamController<FileInfo>();
     _pushFileToStream(streamController, url, headers);
     return streamController.stream;
   }
@@ -151,18 +151,18 @@ class ImageCacheManager {
       String fileExtension = "file"}) async {
     var cacheObject = await store.retrieveCacheData(url);
     if (cacheObject == null) {
-      var relativePath = "${new Uuid().v1()}.$fileExtension";
-      cacheObject = new CacheObject(url, relativePath: relativePath);
+      var relativePath = "${Uuid().v1()}.$fileExtension";
+      cacheObject = CacheObject(url, relativePath: relativePath);
     }
     cacheObject.validTill = DateTime.now().add(maxAge);
     cacheObject.eTag = eTag;
 
     var path = p.join(await getFilePath(), cacheObject.relativePath);
-    var folder = new File(path).parent;
+    var folder = File(path).parent;
     if (!(await folder.exists())) {
       folder.createSync(recursive: true);
     }
-    var file = await new File(path).writeAsBytes(fileBytes);
+    var file = await File(path).writeAsBytes(fileBytes);
 
     store.putFile(cacheObject);
 
