@@ -15,7 +15,6 @@ import 'image_cache_manager.dart';
 
 ///
 /// A image cache helper that stores and transforms cache on disk as per specified dimensions
-/// @author humblerookie
 ///
 
 class ImageWebHelper {
