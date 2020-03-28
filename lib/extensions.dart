@@ -10,7 +10,7 @@ extension ImageUtil on String {
       if (width != null) {
         queryParams[config.widthKey] = width.toString();
       }
-      if (width != null) {
+      if (height != null) {
         queryParams[config.heightKey] = height.toString();
       }
       uri = uri.replace(queryParameters: queryParams);

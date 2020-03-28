@@ -1,3 +1,6 @@
+## 0.1.4
+* Fixed issue faced while specifying custom width and height.
+
 ## 0.1.3
 * Readme updated.
 

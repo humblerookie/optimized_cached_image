@@ -1,6 +1,6 @@
 name: optimized_cached_image
 description: A library for loading images from network, resizing as per container size and caching while being memory sensitive.
-version: 0.1.3
+version: 0.1.4
 homepage: https://github.com/humblerookie/optimized_cached_image
 
 environment:

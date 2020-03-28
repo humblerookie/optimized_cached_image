@@ -173,8 +173,10 @@ class ImageWebHelper {
 
   Future<List<int>> getCompressedResponse(Uint8List bodyBytes, String url) {
     final uri = Uri.dataFromString(url);
-    int height = int.tryParse(uri.queryParameters[imageCacheConfig.heightKey]);
-    int width = int.tryParse(uri.queryParameters[imageCacheConfig.widthKey]);
+    String heightParam = uri.queryParameters[imageCacheConfig.heightKey];
+    int height = heightParam != null ? int.tryParse(heightParam) : null;
+    String widthParam = uri.queryParameters[imageCacheConfig.widthKey];
+    int width = widthParam != null ? int.tryParse(widthParam) : null;
     final data = bodyBytes.toList();
     if (height != null && width != null) {
       return FlutterImageCompress.compressWithList(

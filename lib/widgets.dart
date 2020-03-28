@@ -219,8 +219,8 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
     return LayoutBuilder(builder: (ctx, constraints) {
       if (widget.width != null || widget.height != null) {
         constraints = BoxConstraints(
-            maxWidth: widget.width ?? double.infinity,
-            maxHeight: widget.height ?? double.infinity);
+            maxWidth: widget.width ?? double.minPositive,
+            maxHeight: widget.height ?? double.minPositive);
       }
       final url = _getFormattedUrl(
           widget.imageUrl, constraints, widget.cacheManager.cacheConfig);
