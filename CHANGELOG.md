@@ -1,3 +1,7 @@
+## 0.1.5
+
+* Minor lint issues and formatting patched.
+
 ## 0.1.4
 * Fixed issue faced while specifying custom width and height.
 
