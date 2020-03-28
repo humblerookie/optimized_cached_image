@@ -9,8 +9,12 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final urlPrefix = "https://i.picsum.photos/id/";
+  final urlSuffix = "/1000/1000.jpg";
+
   @override
   Widget build(BuildContext context) {
+    final items = 20;
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
@@ -21,27 +25,36 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             children: <Widget>[
               SizedBox(
-                height: 50,
+                height: 20,
               ),
               Text("This is via the widget: OptimizedCacheImage"),
               // the following Image will have width its dimensions on disk = width of device
               // You don't need to specify width/height explicitly the widget automatically
               // detects it based on its parent's constraints.
               OptimizedCacheImage(
-                imageUrl:
-                    "https://grist.files.wordpress.com/2019/07/ocean1.jpg",
+                imageUrl: "https://i.picsum.photos/id/110/1000/300.jpg",
               ),
               SizedBox(
-                height: 50,
+                height: 20,
               ),
               Text("This is via the provider: OptimizedCacheImageProvider"),
               //Unlike OptimizedCacheImage, OptimizedCacheImageProvider needs cacheWidth or/and cacheHeight to resize images
               Image(
                 image: OptimizedCacheImageProvider(
                     "https://p.bigstockphoto.com/rwyznvNQ76U2liDFDH6g_bigstock-Yachts-In-City-Bay-At-Hot-Summ-283784740.jpg",
-                    cacheHeight: 150,
-                    cacheWidth: 200),
+                    cacheHeight: 50,
+                    cacheWidth: 20),
               ),
+              Container(
+                  height: 300,
+                  child: GridView.count(
+                      crossAxisCount: 2,
+                      children: List.generate(items, (index) {
+                        final url = "$urlPrefix${(index + 1)}$urlSuffix";
+                        return OptimizedCacheImage(
+                          imageUrl: url,
+                        );
+                      }))),
             ],
           ),
         ),
