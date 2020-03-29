@@ -22,8 +22,16 @@ OptimizedCacheImage(
         errorWidget: (context, url, error) => Icon(Icons.error),
      ),
  ```
-and that's it, you don't need to specify any explicit sizes images will be loaded based on available space.
+and that's it, you don't need to specify any explicit sizes images will be loaded based on available space in the container. However In case you feel auto size doesn't work for you feel free to specify `width` and `height` params.
 
+
+If you're using the provider you'd have to specify `cacheWidth` or `cacheHeight` in order for resize to work. You can wrap it inside [LayoutBuilder](https://api.flutter.dev/flutter/widgets/LayoutBuilder-class.html) or specify an explicity size
+````dart
+LayoutBuilder(builder: (_, constraints) {
+  Image(image: OptimizedCacheImageProvider(url, cacheWidth:constraints.maxWidth))
+})
+````
+or
 ````dart
 Image(image: OptimizedCacheImageProvider(url, cacheWidth:100))
 ````
