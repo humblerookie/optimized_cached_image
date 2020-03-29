@@ -12,9 +12,11 @@ import 'package:flutter_cache_manager/src/file_fetcher.dart';
 import 'package:flutter_cache_manager/src/file_info.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:http/http.dart' as http;
+import 'package:optimized_cached_image/custom_fetcher_response.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
+import 'extensions.dart';
 import 'image_cache_manager.dart';
 
 ///
@@ -76,9 +78,14 @@ class ImageWebHelper {
 
     var success = false;
 
-    var response = await _fileFetcher(url, headers: headers);
-    success = await _handleHttpResponse(response, cacheObject, url);
-
+    List<dynamic> result;
+    if (imageCacheConfig.useHttpStream) {
+      result = await _downloadAsStream(url, headers, cacheObject);
+    } else {
+      result = await _downloadOneShot(url, headers, cacheObject);
+    }
+    final response = result[0] as FileFetcherResponse;
+    success = result[1];
     if (!success) {
       throw HttpException(
           "No valid statuscode. Statuscode was ${response?.statusCode}");
@@ -171,12 +178,61 @@ class ImageWebHelper {
     }
   }
 
+  Future<List<dynamic>> _downloadOneShot(url, headers, cacheObject) async {
+    final response = await _fileFetcher(url, headers: headers);
+    final success = await _handleHttpResponse(response, cacheObject, url);
+    return [response, success];
+  }
+
+  Future<List<dynamic>> _downloadAsStream(
+      String url, Map<String, String> headers, CacheObject cacheObject) async {
+    var client = http.Client();
+    List<dynamic> result;
+    try {
+      var request = http.Request("GET", Uri.parse(url))
+        ..headers.addAll(headers);
+      http.StreamedResponse response = await client.send(request);
+      var success = false;
+      final customResponse = CustomFetcherResponse(response);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        String basePath = await _store.filePath;
+        await _setDataFromHeaders(cacheObject, customResponse);
+        var path = p.join(
+            basePath, cacheObject.relativePath + cacheObject.tmpFileSuffix());
+        var folder = File(path).parent;
+        if (!(await folder.exists())) {
+          folder.createSync(recursive: true);
+        }
+        final file = File(path);
+        var sink = file.openWrite();
+        try {
+          await response.stream.pipe(sink);
+          await compressAsFile(file, cacheObject, basePath, url);
+          file.deleteSync();
+          success = true;
+        } catch (e) {
+          success = false;
+        } finally {
+          sink.close();
+        }
+      }
+      if (response.statusCode == 304) {
+        await _setDataFromHeaders(cacheObject, customResponse);
+        success = true;
+      }
+      final fetcherResponse = http.Response("", response.statusCode,
+          request: request, headers: response.headers);
+      result= [HttpFileFetcherResponse(fetcherResponse), success];
+    } finally{
+      client.close();
+    }
+    return result;
+  }
+
   Future<List<int>> getCompressedResponse(Uint8List bodyBytes, String url) {
     final uri = Uri.dataFromString(url);
-    String heightParam = uri.queryParameters[imageCacheConfig.heightKey];
-    int height = heightParam != null ? int.tryParse(heightParam) : null;
-    String widthParam = uri.queryParameters[imageCacheConfig.widthKey];
-    int width = widthParam != null ? int.tryParse(widthParam) : null;
+    int height = uri.height(imageCacheConfig);
+    int width = uri.width(imageCacheConfig);
     final data = bodyBytes.toList();
     if (height != null && width != null) {
       return FlutterImageCompress.compressWithList(
@@ -192,6 +248,34 @@ class ImageWebHelper {
     } else {
       return FlutterImageCompress.compressWithList(
         data,
+        minWidth: width,
+      );
+    }
+  }
+
+  Future<void> compressAsFile(
+      File file, CacheObject cacheObject, String basePath, String url) async {
+    final uri = Uri.dataFromString(url);
+    int height = uri.height(imageCacheConfig);
+    int width = uri.width(imageCacheConfig);
+    final target = p.join(basePath, cacheObject.relativePath);
+    if (height != null && width != null) {
+      await FlutterImageCompress.compressAndGetFile(
+        file.path,
+        target,
+        minHeight: height,
+        minWidth: width,
+      );
+    } else if (height != null) {
+      await FlutterImageCompress.compressAndGetFile(
+        file.path,
+        target,
+        minHeight: height,
+      );
+    } else {
+      await FlutterImageCompress.compressAndGetFile(
+        file.path,
+        target,
         minWidth: width,
       );
     }
