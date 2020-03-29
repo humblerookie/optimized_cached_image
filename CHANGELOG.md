@@ -1,3 +1,8 @@
+## 0.1.6
+
+* Add experimental support for streamed downloading via `useHttpStream` flag which further
+reduces the memory footprint.
+
 ## 0.1.5
 
 * Minor lint issues and formatting patched.

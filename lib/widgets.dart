@@ -28,7 +28,7 @@ typedef LoadingErrorWidgetBuilder = Widget Function(
 //This class is a drop in replacement for CachedNetworkImage
 class OptimizedCacheImage extends StatefulWidget {
   //// Option to use cachemanager with other settings
-  final ImageCacheManager cacheManager = ImageCacheManager();
+  final ImageCacheManager cacheManager = ImageCacheManager.getInstance();
 
   /// The target image that is displayed.
   final String imageUrl;
@@ -363,7 +363,7 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
   }
 
   ImageCacheManager _cacheManager() {
-    return widget.cacheManager ?? ImageCacheManager();
+    return widget.cacheManager ?? ImageCacheManager.getInstance();
   }
 
   _image(BuildContext context, ImageProvider imageProvider) {
@@ -430,7 +430,7 @@ class OptimizedCacheImageProvider
         width: cacheWidth, height: cacheHeight);
   }
 
-  final ImageCacheManager cacheManager = ImageCacheManager();
+  final ImageCacheManager cacheManager = ImageCacheManager.getInstance();
 
   /// Web url of the image to load
   final String url;
@@ -470,7 +470,7 @@ class OptimizedCacheImageProvider
   }
 
   Future<ui.Codec> _loadAsync(OptimizedCacheImageProvider key) async {
-    var mngr = cacheManager ?? ImageCacheManager();
+    var mngr = cacheManager ?? ImageCacheManager.getInstance();
     var file = await mngr.getSingleFile(formattedUrl, headers: headers);
     if (file == null) {
       if (errorListener != null) errorListener();
