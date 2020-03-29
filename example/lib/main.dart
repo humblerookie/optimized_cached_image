@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:optimized_cached_image/image_cache_manager.dart';
 import 'package:optimized_cached_image/widgets.dart';
 
 void main() => runApp(MyApp());
@@ -13,8 +14,19 @@ class _MyAppState extends State<MyApp> {
   final urlSuffix = "/1000/1000.jpg";
 
   @override
+  void initState() {
+    super.initState();
+
+    ///This initialization is not really needed, just for the purpose of showcase.
+    /// `useHttpStream` reduces memory footprint but is experimental as of now
+    /// other params are `widthKey` and `heightKey`
+    ImageCacheManager.init(ImageCacheConfig(useHttpStream: true));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final items = 20;
+
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
@@ -50,7 +62,7 @@ class _MyAppState extends State<MyApp> {
                   child: GridView.count(
                       crossAxisCount: 2,
                       children: List.generate(items, (index) {
-                        final url = "$urlPrefix${(index + 1)}$urlSuffix";
+                        final url = "$urlPrefix${(index + 60)}$urlSuffix";
                         return OptimizedCacheImage(
                           imageUrl: url,
                         );

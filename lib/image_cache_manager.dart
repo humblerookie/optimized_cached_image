@@ -3,10 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-
 // ignore: implementation_imports
 import 'package:flutter_cache_manager/src/cache_object.dart';
-
 // ignore: implementation_imports
 import 'package:flutter_cache_manager/src/cache_store.dart';
 import 'package:path/path.dart' as p;
@@ -14,12 +12,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import 'image_web_helper.dart';
+
 export 'package:optimized_cached_image/image_cache_manager.dart';
 
 ///
 /// A cache manager that uses ImageWebHelper to store and transform images into cache
 /// @author humblerookie
 ///
+
 class ImageCacheManager {
   static ImageCacheManager _instance;
   final ImageCacheConfig cacheConfig;
@@ -28,27 +28,25 @@ class ImageCacheManager {
   Duration _maxAgeCacheObject;
   int _maxNrOfCacheObjects;
 
-  ImageCacheManager._(this.cacheConfig, Duration maxAgeCacheObject,
-      int maxNrOfCacheObjects, FileFetcher fileFetcher) {
+  ImageCacheManager._(this.cacheConfig) {
     _fileBasePath = getFilePath();
-    _maxAgeCacheObject = maxAgeCacheObject;
-    _maxNrOfCacheObjects = maxNrOfCacheObjects;
+    _maxAgeCacheObject = cacheConfig.maxAgeCacheObject;
+    _maxNrOfCacheObjects = cacheConfig.maxNrOfCacheObjects;
     store = CacheStore(
         _fileBasePath, _cacheKey, _maxNrOfCacheObjects, _maxAgeCacheObject);
     webHelper = ImageWebHelper(store, null, cacheConfig);
   }
 
-  factory ImageCacheManager(
-      {ImageCacheConfig cacheConfig,
-      Duration maxAgeCacheObject = const Duration(days: 30),
-      int maxNrOfCacheObjects = 200,
-      FileFetcher fileFetcher}) {
+  static ImageCacheManager getInstance({ImageCacheConfig cacheConfig}) {
     if (_instance == null) {
-      _instance = ImageCacheManager._(cacheConfig ?? ImageCacheConfig(),
-          maxAgeCacheObject, maxNrOfCacheObjects, fileFetcher);
+      _instance = ImageCacheManager._(cacheConfig ?? ImageCacheConfig());
     }
     return _instance;
   }
+
+  //Handy instance fetcher
+  static init(ImageCacheConfig cacheConfig) =>
+      getInstance(cacheConfig: cacheConfig);
 
   /// Store helper for cached files
   CacheStore store;
@@ -196,8 +194,24 @@ class ImageCacheConfig {
   ///The url param name which holds the required height value
   final String heightKey;
 
+  /// Setting this flag forces the image fetch to use a chunked stream that lowers memory footprint
+  /// Note: this may cause slightly higher load times is is currently experimental
+  final bool useHttpStream;
+
+  /// Max age of the cache objects default is 30 days
+  final Duration maxAgeCacheObject;
+
+
+  /// Max number of the cache objects default is 200
+  final int maxNrOfCacheObjects;
+
+  /// A file fetcher function instance used for retrieving data http get is default
+  final FileFetcher fileFetcher;
+
   ImageCacheConfig(
-      {this.widthKey = DEFAULT_WIDTH_KEY, this.heightKey = DEFAULT_HEIGHT_KEY});
+      {this.widthKey = DEFAULT_WIDTH_KEY,
+      this.heightKey = DEFAULT_HEIGHT_KEY,
+      this.useHttpStream = false,this.maxAgeCacheObject= const Duration(days: 30), this.maxNrOfCacheObjects= 200, this.fileFetcher});
 
   static const DEFAULT_WIDTH_KEY = "oci_width";
   static const DEFAULT_HEIGHT_KEY = "oci_height";
