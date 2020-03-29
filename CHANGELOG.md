@@ -1,3 +1,7 @@
+## 0.1.7
+
+* Add style fixes
+
 ## 0.1.6
 
 * Add experimental support for streamed downloading via `useHttpStream` flag which further

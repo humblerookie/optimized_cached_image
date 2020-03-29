@@ -22,17 +22,16 @@ extension ImageUtil on String {
   }
 }
 
-
 extension Constants on CacheObject {
-  String tmpFileSuffix()=>"_tmp";
+  String tmpFileSuffix() => "_tmp";
 }
 
-extension UriUtil on Uri{
-
+extension UriUtil on Uri {
   int height(ImageCacheConfig config) {
     String heightParam = this.queryParameters[config.heightKey];
     return heightParam != null ? int.tryParse(heightParam) : null;
   }
+
   int width(ImageCacheConfig config) {
     String widthParam = this.queryParameters[config.widthKey];
     return widthParam != null ? int.tryParse(widthParam) : null;
