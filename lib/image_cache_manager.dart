@@ -201,7 +201,6 @@ class ImageCacheConfig {
   /// Max age of the cache objects default is 30 days
   final Duration maxAgeCacheObject;
 
-
   /// Max number of the cache objects default is 200
   final int maxNrOfCacheObjects;
 
@@ -211,7 +210,10 @@ class ImageCacheConfig {
   ImageCacheConfig(
       {this.widthKey = DEFAULT_WIDTH_KEY,
       this.heightKey = DEFAULT_HEIGHT_KEY,
-      this.useHttpStream = false,this.maxAgeCacheObject= const Duration(days: 30), this.maxNrOfCacheObjects= 200, this.fileFetcher});
+      this.useHttpStream = false,
+      this.maxAgeCacheObject = const Duration(days: 30),
+      this.maxNrOfCacheObjects = 200,
+      this.fileFetcher});
 
   static const DEFAULT_WIDTH_KEY = "oci_width";
   static const DEFAULT_HEIGHT_KEY = "oci_height";

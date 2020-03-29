@@ -222,8 +222,8 @@ class ImageWebHelper {
       }
       final fetcherResponse = http.Response("", response.statusCode,
           request: request, headers: response.headers);
-      result= [HttpFileFetcherResponse(fetcherResponse), success];
-    } finally{
+      result = [HttpFileFetcherResponse(fetcherResponse), success];
+    } finally {
       client.close();
     }
     return result;

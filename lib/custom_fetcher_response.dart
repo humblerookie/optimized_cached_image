@@ -1,10 +1,9 @@
-
 import 'dart:typed_data';
 
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:http/http.dart';
 
-class CustomFetcherResponse extends  FileFetcherResponse {
+class CustomFetcherResponse extends FileFetcherResponse {
   final StreamedResponse _response;
 
   CustomFetcherResponse(this._response);
@@ -24,5 +23,4 @@ class CustomFetcherResponse extends  FileFetcherResponse {
 
   @override
   get statusCode => _response.statusCode;
-
 }
