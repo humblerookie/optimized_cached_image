@@ -1,4 +1,11 @@
+
+## 0.1.8
+
+* Fix dependency version breaking change in flutter cache library.
+
+
 ## 0.1.7
+
 
 * Add style fixes
 
