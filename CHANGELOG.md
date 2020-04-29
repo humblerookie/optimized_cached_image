@@ -1,4 +1,8 @@
 
+## 0.1.9
+
+* Fix transparency/image format issues.
+
 ## 0.1.8
 
 * Fix dependency version breaking change in flutter cache library.

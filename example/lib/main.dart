@@ -53,7 +53,7 @@ class _MyAppState extends State<MyApp> {
               //Unlike OptimizedCacheImage, OptimizedCacheImageProvider needs cacheWidth or/and cacheHeight to resize images
               Image(
                 image: OptimizedCacheImageProvider(
-                    "https://p.bigstockphoto.com/rwyznvNQ76U2liDFDH6g_bigstock-Yachts-In-City-Bay-At-Hot-Summ-283784740.jpg",
+                    "https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png",
                     cacheHeight: 50,
                     cacheWidth: 20),
               ),

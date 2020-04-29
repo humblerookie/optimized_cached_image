@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 
 // ignore: implementation_imports
 import 'package:flutter_cache_manager/src/cache_object.dart';
@@ -28,6 +29,13 @@ class ImageWebHelper {
   CacheStore _store;
   FileFetcher _fileFetcher;
   Map<String, Future<FileInfo>> _memCache;
+  final _compressionFormats = {
+    '.jpg': CompressFormat.jpeg,
+    '.jpeg': CompressFormat.jpeg,
+    '.webp': CompressFormat.webp,
+    '.png': CompressFormat.png,
+    '.heic': CompressFormat.heic,
+  };
 
   ImageWebHelper(store, fileFetcher, this.imageCacheConfig) {
     _store = store;
@@ -116,7 +124,7 @@ class ImageWebHelper {
         folder.createSync(recursive: true);
       }
       final compressedBytes =
-          await getCompressedResponse(response.bodyBytes, url);
+          await getCompressedResponse(response.bodyBytes, path, url);
       await File(path).writeAsBytes(Uint8List.fromList(compressedBytes));
       return true;
     }
@@ -229,28 +237,21 @@ class ImageWebHelper {
     return result;
   }
 
-  Future<List<int>> getCompressedResponse(Uint8List bodyBytes, String url) {
+  Future<List<int>> getCompressedResponse(
+      Uint8List bodyBytes, String path, String url) {
     final uri = Uri.dataFromString(url);
     int height = uri.height(imageCacheConfig);
     int width = uri.width(imageCacheConfig);
     final data = bodyBytes.toList();
-    if (height != null && width != null) {
-      return FlutterImageCompress.compressWithList(
-        data,
-        minHeight: height,
-        minWidth: width,
-      );
-    } else if (height != null) {
-      return FlutterImageCompress.compressWithList(
-        data,
-        minHeight: height,
-      );
-    } else {
-      return FlutterImageCompress.compressWithList(
-        data,
-        minWidth: width,
-      );
-    }
+    String extension = p.extension(path) ?? '';
+    final format = _compressionFormats[extension] ?? CompressFormat.png;
+    final screen = window.physicalSize;
+    return FlutterImageCompress.compressWithList(
+      data,
+      format: format,
+      minWidth: width ?? screen.width.toInt(),
+      minHeight: height ?? screen.height.toInt(),
+    );
   }
 
   Future<void> compressAsFile(
@@ -259,25 +260,15 @@ class ImageWebHelper {
     int height = uri.height(imageCacheConfig);
     int width = uri.width(imageCacheConfig);
     final target = p.join(basePath, cacheObject.relativePath);
-    if (height != null && width != null) {
-      await FlutterImageCompress.compressAndGetFile(
-        file.path,
-        target,
-        minHeight: height,
-        minWidth: width,
-      );
-    } else if (height != null) {
-      await FlutterImageCompress.compressAndGetFile(
-        file.path,
-        target,
-        minHeight: height,
-      );
-    } else {
-      await FlutterImageCompress.compressAndGetFile(
-        file.path,
-        target,
-        minWidth: width,
-      );
-    }
+    final screen = window.physicalSize;
+    String extension = p.extension(target) ?? '';
+    final format = _compressionFormats[extension] ?? CompressFormat.png;
+    await FlutterImageCompress.compressAndGetFile(
+      file.path,
+      target,
+      format: format,
+      minWidth: width ?? screen.width.toInt(),
+      minHeight: height ?? screen.height.toInt(),
+    );
   }
 }

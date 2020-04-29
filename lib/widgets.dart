@@ -12,6 +12,7 @@ import 'image_cache_manager.dart';
 export 'package:optimized_cached_image/widgets.dart';
 
 typedef ErrorListener = void Function();
+typedef OnCompleteListener = void Function();
 typedef ImageWidgetBuilder = Widget Function(
     BuildContext context, ImageProvider imageProvider);
 typedef PlaceholderWidgetBuilder = Widget Function(
@@ -421,6 +422,7 @@ class OptimizedCacheImageProvider
   OptimizedCacheImageProvider(this.url,
       {this.scale = 1.0,
       this.errorListener,
+      this.onCompleteListener,
       this.headers,
       int cacheWidth,
       int cacheHeight})
@@ -443,6 +445,9 @@ class OptimizedCacheImageProvider
 
   /// Listener to be called when images fails to load.
   final ErrorListener errorListener;
+
+  /// Listener to be called when load is completed.
+  final OnCompleteListener onCompleteListener;
 
   // Set headers for the image provider, for example for authentication
   final Map<String, String> headers;
@@ -474,8 +479,10 @@ class OptimizedCacheImageProvider
     var file = await mngr.getSingleFile(formattedUrl, headers: headers);
     if (file == null) {
       if (errorListener != null) errorListener();
+      if (onCompleteListener != null) onCompleteListener();
       return Future<ui.Codec>.error("Couldn't download or retrieve file.");
     }
+    if (onCompleteListener != null) onCompleteListener();
     return await _loadAsyncFromFile(key, file);
   }
 
