@@ -1,3 +1,6 @@
+## 0.1.10
+
+* Migrate to latest apis in cache manager dependency. Now the stream fetching is done by default instead of via flag.
 
 ## 0.1.9
 

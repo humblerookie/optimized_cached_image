@@ -1,192 +1,128 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-// ignore: implementation_imports
-import 'package:flutter_cache_manager/src/cache_object.dart';
-// ignore: implementation_imports
-import 'package:flutter_cache_manager/src/cache_store.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
+import 'package:pedantic/pedantic.dart';
 
-import 'image_web_helper.dart';
+import 'image_transformer.dart';
 
-export 'package:optimized_cached_image/image_cache_manager.dart';
-
-///
-/// A cache manager that uses ImageWebHelper to store and transform images into cache
-/// @author humblerookie
-///
-
-class ImageCacheManager {
-  static ImageCacheManager _instance;
+class ImageCacheManager extends BaseCacheManager {
   final ImageCacheConfig cacheConfig;
-  Future<String> _fileBasePath;
-  final String _cacheKey = "libCachedImageData";
-  Duration _maxAgeCacheObject;
-  int _maxNrOfCacheObjects;
+  final ImageTransformer transformer;
 
-  ImageCacheManager._(this.cacheConfig) {
-    _fileBasePath = getFilePath();
-    _maxAgeCacheObject = cacheConfig.maxAgeCacheObject;
-    _maxNrOfCacheObjects = cacheConfig.maxNrOfCacheObjects;
-    store = CacheStore(
-        _fileBasePath, _cacheKey, _maxNrOfCacheObjects, _maxAgeCacheObject);
-    webHelper = ImageWebHelper(store, null, cacheConfig);
+  @override
+  Future<String> getFilePath() async {
+    if (cacheConfig.storagePath != null) {
+      final Directory directory = await cacheConfig.storagePath;
+      return directory.path;
+    } else {
+      final Directory directory = await getTemporaryDirectory();
+      return p.join(directory.path, key);
+    }
   }
 
-  static ImageCacheManager getInstance({ImageCacheConfig cacheConfig}) {
-    if (_instance == null) {
-      _instance = ImageCacheManager._(cacheConfig ?? ImageCacheConfig());
-    }
+  static const key = 'libCachedImageData';
+
+  static ImageCacheManager _instance;
+
+  /// The ScaledCacheManager that can be easily used directly. The code of
+  /// this implementation can be used as inspiration for more complex cache
+  /// managers.
+  factory ImageCacheManager(
+      {ImageCacheConfig cacheConfig, ImageTransformer transformer}) {
+    final config = cacheConfig ?? ImageCacheConfig();
+    _instance ??= ImageCacheManager._(
+        config, transformer ?? DefaultImageTransformer(config));
     return _instance;
   }
 
-  //Handy instance fetcher
-  static init(ImageCacheConfig cacheConfig) =>
-      getInstance(cacheConfig: cacheConfig);
-
-  /// Store helper for cached files
-  CacheStore store;
-
-  /// Webhelper to download and store files
-  ImageWebHelper webHelper;
-
-  Future<String> getFilePath() async {
-    var directory = await getTemporaryDirectory();
-    return p.join(directory.path, _cacheKey);
+  /// A named initializer for when clients wish to initialize the manager with custom config.
+  /// This is purely for syntax purposes.
+  factory ImageCacheManager.init(ImageCacheConfig cacheConfig,
+      {ImageTransformer transformer}) {
+    return ImageCacheManager(
+        cacheConfig: cacheConfig, transformer: transformer);
   }
 
-  /// Get the file from the cache and/or online, depending on availability and age.
-  /// Downloaded form [url], [headers] can be used for example for authentication.
-  /// When a file is cached it is return directly, when it is too old the file is
-  /// downloaded in the background. When a cached file is not available the
-  /// newly downloaded file is returned.
-  Future<File> getSingleFile(String url, {Map<String, String> headers}) async {
-    var cacheFile = await getFileFromCache(url);
-    if (cacheFile != null) {
-      if (cacheFile.validTill.isBefore(DateTime.now())) {
-        webHelper.downloadFile(url, authHeaders: headers);
-      }
-      return cacheFile.file;
-    }
-    try {
-      var download = await webHelper.downloadFile(url, authHeaders: headers);
-      return download.file;
-    } catch (e) {
-      return null;
-    }
+  ImageCacheManager._(this.cacheConfig, this.transformer) : super(key);
+
+  ///Download the file and add to cache
+  @override
+  Future<FileInfo> downloadFile(String url,
+      {Map<String, String> authHeaders, bool force = false}) async {
+    var response =
+        await super.downloadFile(url, authHeaders: authHeaders, force: force);
+    response = await transformer.transform(response, url);
+    return response;
   }
 
   /// Get the file from the cache and/or online, depending on availability and age.
   /// Downloaded form [url], [headers] can be used for example for authentication.
   /// The files are returned as stream. First the cached file if available, when the
   /// cached file is too old the newly downloaded file is returned afterwards.
-  Stream<FileInfo> getFile(String url, {Map<String, String> headers}) {
-    var streamController = StreamController<FileInfo>();
-    _pushFileToStream(streamController, url, headers);
-    return streamController.stream;
-  }
-
-  _pushFileToStream(StreamController streamController, String url,
-      Map<String, String> headers) async {
-    FileInfo cacheFile;
-    try {
-      cacheFile = await getFileFromCache(url);
-      if (cacheFile != null) {
-        streamController.add(cacheFile);
+  ///
+  /// The [FileResponse] is either a [FileInfo] object for fully downloaded files
+  /// or a [DownloadProgress] object for when a file is being downloaded.
+  /// The [DownloadProgress] objects are only dispatched when [withProgress] is
+  /// set on true and the file is not available in the cache. When the file is
+  /// returned from the cache there will be no progress given, although the file
+  /// might be outdated and a new file is being downloaded in the background.
+  @override
+  Stream<FileResponse> getFileStream(String url,
+      {Map<String, String> headers, bool withProgress}) {
+    final upStream =
+        super.getFileStream(url, headers: headers, withProgress: withProgress);
+    final downStream = StreamController<FileResponse>();
+    var isUpStreamClosed = false;
+    upStream.listen((d) async {
+      if (d is FileInfo) {
+        d = await transformer.transform(d, url);
       }
-    } catch (e) {
-      print(
-          "CacheManager: Failed to load cached file for $url with error:\n$e");
-    }
-    if (cacheFile == null || cacheFile.validTill.isBefore(DateTime.now())) {
-      try {
-        var webFile = await webHelper.downloadFile(url, authHeaders: headers);
-        if (webFile != null) {
-          streamController.add(webFile);
-        }
-      } catch (e) {
-        assert(() {
-          print(
-              "CacheManager: Failed to download file from $url with error:\n$e");
-          return true;
-        }());
-        if (cacheFile == null && streamController.hasListener) {
-          streamController.addError(e);
-        }
+      downStream.add(d);
+      if (isUpStreamClosed) {
+        unawaited(downStream.close());
       }
-    }
-    streamController.close();
-  }
-
-  ///Download the file and add to cache
-  Future<FileInfo> downloadFile(String url,
-      {Map<String, String> authHeaders, bool force = false}) async {
-    return await webHelper.downloadFile(url,
-        authHeaders: authHeaders, ignoreMemCache: force);
-  }
-
-  ///Get the file from the cache
-  Future<FileInfo> getFileFromCache(String url) async {
-    return await store.getFile(url);
-  }
-
-  ///Returns the file from memory if it has already been fetched
-  FileInfo getFileFromMemory(String url) {
-    return store.getFileFromMemory(url);
-  }
-
-  /// Put a file in the cache. It is recommended to specify the [eTag] and the
-  /// [maxAge]. When [maxAge] is passed and the eTag is not set the file will
-  /// always be downloaded again. The [fileExtension] should be without a dot,
-  /// for example "jpg". When cache info is available for the url that path
-  /// is re-used.
-  /// The returned [File] is saved on disk.
-  Future<File> putFile(String url, Uint8List fileBytes,
-      {String eTag,
-      Duration maxAge = const Duration(days: 30),
-      String fileExtension = "file"}) async {
-    var cacheObject = await store.retrieveCacheData(url);
-    if (cacheObject == null) {
-      var relativePath = "${Uuid().v1()}.$fileExtension";
-      cacheObject = CacheObject(url, relativePath: relativePath);
-    }
-    cacheObject.validTill = DateTime.now().add(maxAge);
-    cacheObject.eTag = eTag;
-
-    var path = p.join(await getFilePath(), cacheObject.relativePath);
-    var folder = File(path).parent;
-    if (!(await folder.exists())) {
-      folder.createSync(recursive: true);
-    }
-    var file = await File(path).writeAsBytes(fileBytes);
-
-    store.putFile(cacheObject);
-
-    return file;
-  }
-
-  /// Remove a file from the cache
-  removeFile(String url) async {
-    var cacheObject = await store.retrieveCacheData(url);
-    if (cacheObject != null) {
-      await store.removeCachedFile(cacheObject);
-    }
-  }
-
-  /// Removes all files from the cache
-  emptyCache() async {
-    await store.emptyCache();
+    }, onError: (e) {
+      downStream.addError(e);
+      downStream.close();
+    }, onDone: () {
+      isUpStreamClosed = true;
+    });
+    return downStream.stream;
   }
 }
 
 ///
-/// This class is contains configuration information
-/// for the meta params mapped as query params in the url being used.
+/// Helper method to transform image urls
 ///
+String getDimensionSuffixedUrl(
+    ImageCacheConfig config, String url, int width, int height) {
+  Uri uri;
+  try {
+    uri = Uri.parse(url);
+    if (uri != null) {
+      Map<String, String> queryParams =
+          Map<String, String>.from(uri.queryParameters);
+      if (width != null) {
+        queryParams[config.widthKey] = width.toString();
+      }
+      if (height != null) {
+        queryParams[config.heightKey] = height.toString();
+      }
+      uri = uri.replace(queryParameters: queryParams);
+    }
+  } catch (e) {
+    print('Error occured while parsing url $e');
+  }
+  return uri?.toString() ?? url;
+}
+
+abstract class ImageTransformer {
+  Future<FileInfo> transform(FileInfo info, String uri);
+}
+
 class ImageCacheConfig {
   ///The url param name which holds the required width value
   final String widthKey;
@@ -194,27 +130,14 @@ class ImageCacheConfig {
   ///The url param name which holds the required height value
   final String heightKey;
 
-  /// Setting this flag forces the image fetch to use a chunked stream that lowers memory footprint
-  /// Note: this may cause slightly higher load times is is currently experimental
-  final bool useHttpStream;
-
-  /// Max age of the cache objects default is 30 days
-  final Duration maxAgeCacheObject;
-
-  /// Max number of the cache objects default is 200
-  final int maxNrOfCacheObjects;
-
-  /// A file fetcher function instance used for retrieving data http get is default
-  final FileFetcher fileFetcher;
+  /// Storage path for cache
+  final Future<Directory> storagePath;
 
   ImageCacheConfig(
       {this.widthKey = DEFAULT_WIDTH_KEY,
       this.heightKey = DEFAULT_HEIGHT_KEY,
-      this.useHttpStream = false,
-      this.maxAgeCacheObject = const Duration(days: 30),
-      this.maxNrOfCacheObjects = 200,
-      this.fileFetcher});
+      this.storagePath});
 
-  static const DEFAULT_WIDTH_KEY = "oci_width";
-  static const DEFAULT_HEIGHT_KEY = "oci_height";
+  static const DEFAULT_WIDTH_KEY = 'oci_width';
+  static const DEFAULT_HEIGHT_KEY = 'oci_height';
 }

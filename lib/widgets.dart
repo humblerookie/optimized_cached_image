@@ -1,35 +1,29 @@
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui show instantiateImageCodec, Codec;
-
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
-import 'extensions.dart';
+import 'image_provider/_image_provider_io.dart'
+    if (dart.library.html) 'image_provider/_image_provider_web.dart'
+    as image_provider;
 import 'image_cache_manager.dart';
 
 export 'package:optimized_cached_image/widgets.dart';
 
 typedef ErrorListener = void Function();
-typedef OnCompleteListener = void Function();
+
 typedef ImageWidgetBuilder = Widget Function(
     BuildContext context, ImageProvider imageProvider);
 typedef PlaceholderWidgetBuilder = Widget Function(
     BuildContext context, String url);
+typedef ProgressIndicatorBuilder = Widget Function(
+    BuildContext context, String url, DownloadProgress progress);
 typedef LoadingErrorWidgetBuilder = Widget Function(
-    BuildContext context, String url, Object error);
+    BuildContext context, String url, dynamic error);
 
-///
-///Optimized Image Cache
-///Copyright (c) 2020 @humblerookie
-///Released under MIT License.
-///
-
-//This class is a drop in replacement for CachedNetworkImage
 class OptimizedCacheImage extends StatefulWidget {
-  //// Option to use cachemanager with other settings
-  final ImageCacheManager cacheManager = ImageCacheManager.getInstance();
+  /// Option to use cachemanager with other settings
+  final BaseCacheManager cacheManager;
 
   /// The target image that is displayed.
   final String imageUrl;
@@ -39,6 +33,9 @@ class OptimizedCacheImage extends StatefulWidget {
 
   /// Widget displayed while the target [imageUrl] is loading.
   final PlaceholderWidgetBuilder placeholder;
+
+  /// Widget displayed while the target [imageUrl] is loading.
+  final ProgressIndicatorBuilder progressIndicatorBuilder;
 
   /// Widget displayed while the target [imageUrl] failed loading.
   final LoadingErrorWidgetBuilder errorWidget;
@@ -149,29 +146,35 @@ class OptimizedCacheImage extends StatefulWidget {
   /// If not given a value, defaults to FilterQuality.low.
   final FilterQuality filterQuality;
 
-  OptimizedCacheImage(
-      {Key key,
-      this.imageUrl,
-      this.fit,
-      this.errorWidget,
-      this.imageBuilder,
-      this.placeholder,
-      this.placeholderFadeInDuration,
-      this.fadeOutDuration = const Duration(milliseconds: 1000),
-      this.fadeOutCurve = Curves.easeOut,
-      this.fadeInDuration = const Duration(milliseconds: 500),
-      this.fadeInCurve = Curves.easeIn,
-      this.width,
-      this.height,
-      this.alignment = Alignment.center,
-      this.repeat = ImageRepeat.noRepeat,
-      this.matchTextDirection = false,
-      this.httpHeaders,
-      this.useOldImageOnUrlChange = false,
-      this.color,
-      this.colorBlendMode,
-      this.filterQuality = FilterQuality.low})
-      : assert(imageUrl != null),
+  /// Use experimental scaleCacheManager.
+  final bool useScaleCacheManager;
+
+  OptimizedCacheImage({
+    Key key,
+    @required this.imageUrl,
+    this.imageBuilder,
+    this.placeholder,
+    this.progressIndicatorBuilder,
+    this.errorWidget,
+    this.fadeOutDuration = const Duration(milliseconds: 1000),
+    this.fadeOutCurve = Curves.easeOut,
+    this.fadeInDuration = const Duration(milliseconds: 500),
+    this.fadeInCurve = Curves.easeIn,
+    this.width,
+    this.height,
+    this.fit,
+    this.alignment = Alignment.center,
+    this.repeat = ImageRepeat.noRepeat,
+    this.matchTextDirection = false,
+    this.httpHeaders,
+    this.cacheManager,
+    this.useOldImageOnUrlChange = false,
+    this.color,
+    this.filterQuality = FilterQuality.low,
+    this.colorBlendMode,
+    this.placeholderFadeInDuration,
+    this.useScaleCacheManager = true,
+  })  : assert(imageUrl != null),
         assert(fadeOutDuration != null),
         assert(fadeOutCurve != null),
         assert(fadeInDuration != null),
@@ -180,6 +183,7 @@ class OptimizedCacheImage extends StatefulWidget {
         assert(filterQuality != null),
         assert(repeat != null),
         assert(matchTextDirection != null),
+        assert(useScaleCacheManager != null),
         super(key: key);
 
   @override
@@ -190,6 +194,7 @@ class OptimizedCacheImage extends StatefulWidget {
 
 class _ImageTransitionHolder {
   final FileInfo image;
+  final DownloadProgress progress;
   AnimationController animationController;
   final Object error;
   Curve curve;
@@ -197,12 +202,13 @@ class _ImageTransitionHolder {
 
   _ImageTransitionHolder({
     this.image,
+    this.progress,
     @required this.animationController,
     this.error,
     this.curve = Curves.easeIn,
   }) : forwardTickerFuture = animationController.forward();
 
-  dispose() {
+  void dispose() {
     if (animationController != null) {
       animationController.dispose();
       animationController = null;
@@ -212,8 +218,11 @@ class _ImageTransitionHolder {
 
 class OptimizedCacheImageState extends State<OptimizedCacheImage>
     with TickerProviderStateMixin {
-  List<_ImageTransitionHolder> _imageHolders = List();
+  final _imageHolders = <_ImageTransitionHolder>[];
   Key _streamBuilderKey = UniqueKey();
+  Stream<FileResponse> _fileResponseStream;
+  FileInfo _fromMemory;
+  String _modifiedUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -222,11 +231,43 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
         constraints = BoxConstraints(
             maxWidth: widget.width ?? double.minPositive,
             maxHeight: widget.height ?? double.minPositive);
+      } else {
+        final ratio = MediaQuery.of(context).devicePixelRatio;
+        constraints = BoxConstraints(
+          maxWidth: constraints.maxWidth != double.infinity
+              ? constraints.maxWidth * ratio
+              : constraints.maxWidth,
+          maxHeight: constraints.maxHeight != double.infinity
+              ? constraints.maxHeight * ratio
+              : constraints.maxHeight,
+        );
       }
-      final url = _getFormattedUrl(
-          widget.imageUrl, constraints, widget.cacheManager.cacheConfig);
-      return _animatedWidget(url);
+
+      final url = _transformedUrl(constraints);
+      if (url != _modifiedUrl) {
+        _modifiedUrl = url;
+        _createFileStream();
+      }
+      return _animatedWidget();
     });
+  }
+
+  String _transformedUrl(BoxConstraints constraints) {
+    final _manager = _cacheManager();
+    if (_manager is ImageCacheManager) {
+      var width = constraints.maxWidth;
+      var height = constraints.maxHeight;
+      if (width == double.infinity) {
+        width = null;
+      }
+      if (height == double.infinity) {
+        height = null;
+      }
+      return getDimensionSuffixedUrl(_manager.cacheConfig, widget.imageUrl,
+          width?.toInt(), height?.toInt());
+    } else {
+      return widget.imageUrl;
+    }
   }
 
   @override
@@ -237,6 +278,7 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
         _disposeImageHolders();
         _imageHolders.clear();
       }
+      _createFileStream();
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -247,83 +289,118 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
     super.dispose();
   }
 
-  _disposeImageHolders() {
+  void _createFileStream() {
+    _fromMemory = _cacheManager().getFileFromMemory(_modifiedUrl);
+    _fileResponseStream = _cacheManager()
+        .getFileStream(
+          _modifiedUrl,
+          headers: widget.httpHeaders,
+          withProgress: widget.progressIndicatorBuilder != null,
+        )
+        // ignore errors if not mounted
+        .handleError(() {}, test: (_) => !mounted)
+        .where((f) {
+      if (f is FileInfo) {
+        return f?.originalUrl != _fromMemory?.originalUrl ||
+            f?.validTill != _fromMemory?.validTill;
+      }
+      return true;
+    });
+  }
+
+  void _disposeImageHolders() {
     for (var imageHolder in _imageHolders) {
       imageHolder.dispose();
     }
   }
 
-  _addImage({FileInfo image, Object error, Duration duration}) {
-    if (_imageHolders.length > 0) {
+  void _addImage(
+      {FileInfo image,
+      DownloadProgress progress,
+      Object error,
+      Duration duration}) {
+    if (_imageHolders.isNotEmpty) {
       var lastHolder = _imageHolders.last;
-      lastHolder.forwardTickerFuture.then((_) {
-        if (lastHolder.animationController == null) {
-          return;
-        }
-        if (widget.fadeOutDuration != null) {
-          lastHolder.animationController.duration = widget.fadeOutDuration;
-        } else {
-          lastHolder.animationController.duration = Duration(seconds: 1);
-        }
-        if (widget.fadeOutCurve != null) {
-          lastHolder.curve = widget.fadeOutCurve;
-        } else {
-          lastHolder.curve = Curves.easeOut;
-        }
-        lastHolder.animationController.reverse().then((_) {
-          _imageHolders.remove(lastHolder);
-          if (mounted) setState(() {});
-          return null;
+      if (lastHolder.progress != null && progress != null) {
+        _imageHolders.removeLast();
+      } else {
+        lastHolder.forwardTickerFuture.then((_) {
+          if (lastHolder.animationController == null) {
+            return;
+          }
+          if (widget.fadeOutDuration != null) {
+            lastHolder.animationController.duration = widget.fadeOutDuration;
+          } else {
+            lastHolder.animationController.duration =
+                const Duration(seconds: 1);
+          }
+          if (widget.fadeOutCurve != null) {
+            lastHolder.curve = widget.fadeOutCurve;
+          } else {
+            lastHolder.curve = Curves.easeOut;
+          }
+          lastHolder.animationController.reverse().then((_) {
+            _imageHolders.remove(lastHolder);
+            if (mounted) setState(() {});
+            return null;
+          });
         });
-      });
+      }
     }
     _imageHolders.add(
       _ImageTransitionHolder(
         image: image,
         error: error,
+        progress: progress,
         animationController: AnimationController(
           vsync: this,
           duration: duration ??
-              (widget.fadeInDuration ?? Duration(milliseconds: 500)),
+              (widget.fadeInDuration ?? const Duration(milliseconds: 500)),
         ),
       ),
     );
   }
 
-  _animatedWidget(String url) {
-    var fromMemory = _cacheManager().getFileFromMemory(url);
-
-    return StreamBuilder<FileInfo>(
+  Widget _animatedWidget() {
+    return StreamBuilder<FileResponse>(
       key: _streamBuilderKey,
-      initialData: fromMemory,
-      stream: _cacheManager()
-          .getFile(url, headers: widget.httpHeaders)
-          // ignore errors if not mounted
-          .handleError(() {}, test: (_) => !mounted)
-          .where((f) =>
-              f?.originalUrl != fromMemory?.originalUrl ||
-              f?.validTill != fromMemory?.validTill),
-      builder: (BuildContext context, AsyncSnapshot<FileInfo> snapshot) {
+      initialData: _fromMemory,
+      stream: _fileResponseStream,
+      builder: (BuildContext context, AsyncSnapshot<FileResponse> snapshot) {
         if (snapshot.hasError) {
           // error
-          if (_imageHolders.length == 0 || _imageHolders.last.error == null) {
+          if (_imageHolders.isEmpty || _imageHolders.last.error == null) {
             _addImage(image: null, error: snapshot.error);
           }
         } else {
-          var fileInfo = snapshot.data;
-          if (fileInfo == null) {
+          var fileResponse = snapshot.data;
+          if (fileResponse == null) {
             // placeholder
-            if (_imageHolders.length == 0 || _imageHolders.last.image != null) {
+            if (_imageHolders.isEmpty || _imageHolders.last.image != null) {
+              DownloadProgress progress;
+              if (widget.progressIndicatorBuilder != null) {
+                progress = DownloadProgress(_modifiedUrl, null, 0);
+              }
               _addImage(
+                  progress: progress,
                   image: null,
                   duration: widget.placeholderFadeInDuration ?? Duration.zero);
             }
-          } else if (_imageHolders.length == 0 ||
-              _imageHolders.last.image?.originalUrl != fileInfo.originalUrl ||
-              _imageHolders.last.image?.validTill != fileInfo.validTill) {
-            _addImage(
-                image: fileInfo,
-                duration: _imageHolders.length > 0 ? null : Duration.zero);
+          } else {
+            if (fileResponse is FileInfo) {
+              if (_imageHolders.isEmpty ||
+                  _imageHolders.last.image?.originalUrl !=
+                      fileResponse.originalUrl ||
+                  _imageHolders.last.image?.validTill !=
+                      fileResponse.validTill) {
+                _addImage(
+                    image: fileResponse,
+                    duration: _imageHolders.isNotEmpty ? null : Duration.zero);
+              }
+            }
+            if (fileResponse is DownloadProgress) {
+              _addImage(progress: fileResponse, duration: Duration.zero);
+            }
           }
         }
 
@@ -331,17 +408,27 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
         for (var holder in _imageHolders) {
           if (holder.error != null) {
             children.add(_transitionWidget(
+                holder: holder, child: _errorWidget(context, holder.error)));
+          } else if (holder.progress != null) {
+            children.add(_transitionWidget(
                 holder: holder,
-                child: _errorWidget(context, holder.error, url)));
+                child: widget.progressIndicatorBuilder(
+                  context,
+                  holder.progress.originalUrl,
+                  holder.progress,
+                )));
           } else if (holder.image == null) {
             children.add(_transitionWidget(
-                holder: holder, child: _placeholder(context, url)));
+                holder: holder, child: _placeholder(context)));
           } else {
             children.add(_transitionWidget(
                 holder: holder,
-                child: _image(
-                  context,
-                  FileImage(holder.image.file),
+                child: KeyedSubtree(
+                  key: Key(holder.image.file.path),
+                  child: _image(
+                    context,
+                    FileImage(holder.image.file),
+                  ),
                 )));
           }
         }
@@ -363,11 +450,15 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
     );
   }
 
-  ImageCacheManager _cacheManager() {
-    return widget.cacheManager ?? ImageCacheManager.getInstance();
+  BaseCacheManager _cacheManager() {
+    if (widget.useScaleCacheManager) {
+      return ImageCacheManager();
+    } else {
+      return (widget.cacheManager ?? DefaultCacheManager());
+    }
   }
 
-  _image(BuildContext context, ImageProvider imageProvider) {
+  Widget _image(BuildContext context, ImageProvider imageProvider) {
     return widget.imageBuilder != null
         ? widget.imageBuilder(context, imageProvider)
         : Image(
@@ -384,132 +475,68 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
           );
   }
 
-  _placeholder(BuildContext context, String url) {
+  Widget _placeholder(BuildContext context) {
     return widget.placeholder != null
-        ? widget.placeholder(context, url)
+        ? widget.placeholder(context, widget.imageUrl)
         : SizedBox(
             width: widget.width,
             height: widget.height,
           );
   }
 
-  _errorWidget(BuildContext context, Object error, String url) {
+  Widget _errorWidget(BuildContext context, Object error) {
     return widget.errorWidget != null
-        ? widget.errorWidget(context, url, error)
-        : _placeholder(context, url);
+        ? widget.errorWidget(context, widget.imageUrl, error)
+        : _placeholder(context);
   }
 }
 
-String _getFormattedUrl(
-    String imageUrl, BoxConstraints constraints, ImageCacheConfig config) {
-  int width;
-  int height;
-  if (constraints.maxWidth != double.infinity) {
-    width = constraints.maxWidth.toInt();
-  }
-  if (constraints.maxHeight != double.infinity) {
-    height = constraints.maxHeight.toInt();
-  }
-  return imageUrl?.getSizedFormattedUrl(config, width: width, height: height) ??
-      "";
-}
-
-// Drop in replacement for [CachedNetworkImageProvider]
-class OptimizedCacheImageProvider
+abstract class OptimizedCacheImageProvider
     extends ImageProvider<OptimizedCacheImageProvider> {
-  /// Creates an ImageProvider which loads an image from the [url], using the [scale].
-  /// When the image fails to load [errorListener] is called.
-  OptimizedCacheImageProvider(this.url,
-      {this.scale = 1.0,
-      this.errorListener,
-      this.onCompleteListener,
-      this.headers,
+  /// Creates an object that fetches the image at the given URL.
+  ///
+  /// The arguments [url] and [scale] must not be null.
+  const factory OptimizedCacheImageProvider(
+      String url,
+      {double scale,
+      bool useScaleCacheManager,
+      @Deprecated('ErrorListener is deprecated, use listeners on the imagestream')
+          ErrorListener errorListener,
+      Map<String, String> headers,
+      BaseCacheManager cacheManager,
       int cacheWidth,
-      int cacheHeight})
-      : assert(url != null),
-        assert(scale != null) {
-    formattedUrl = url?.getSizedFormattedUrl(cacheManager.cacheConfig,
-        width: cacheWidth, height: cacheHeight);
-  }
+      int cacheHeight}) = image_provider.OptimizedCacheImageProvider;
 
-  final ImageCacheManager cacheManager = ImageCacheManager.getInstance();
+  /// Optional cache manager. If no cache manager is defined DefaultCacheManager()
+  /// will be used.
+  ///
+  /// When running flutter on the web, the cacheManager is not used.
+  BaseCacheManager get cacheManager;
 
-  /// Web url of the image to load
-  final String url;
+  @deprecated
+  ErrorListener get errorListener;
 
-  /// Web url with size params of the image to load
-  String formattedUrl;
+  /// The URL from which the image will be fetched.
+  String get url;
 
-  /// Scale of the image
-  final double scale;
+  /// The scale to place in the [ImageInfo] object of the image.
+  double get scale;
 
-  /// Listener to be called when images fails to load.
-  final ErrorListener errorListener;
+  /// Flag to switch between default scale cache manager and custom cache manager
+  bool get useScaleCacheManager;
 
-  /// Listener to be called when load is completed.
-  final OnCompleteListener onCompleteListener;
+  /// Used in conjunction with `useScaleCacheManager` as the cache image width.
+  int get cacheWidth;
 
-  // Set headers for the image provider, for example for authentication
-  final Map<String, String> headers;
+  /// Used in conjunction with `useScaleCacheManager` as the cache image height.
+  int get cacheHeight;
 
-  @override
-  Future<OptimizedCacheImageProvider> obtainKey(
-      ImageConfiguration configuration) {
-    return SynchronousFuture<OptimizedCacheImageProvider>(this);
-  }
+  /// The HTTP headers that will be used with [HttpClient.get] to fetch image from network.
+  ///
+  /// When running flutter on the web, headers are not used.
+  Map<String, String> get headers;
 
   @override
   ImageStreamCompleter load(
-      OptimizedCacheImageProvider key, DecoderCallback decode) {
-    return MultiFrameImageStreamCompleter(
-      codec: _loadAsync(key),
-      scale: key.scale,
-      informationCollector: () sync* {
-        yield DiagnosticsProperty<ImageProvider>(
-          'Image provider: $this \n Image key: $key',
-          this,
-          style: DiagnosticsTreeStyle.errorProperty,
-        );
-      },
-    );
-  }
-
-  Future<ui.Codec> _loadAsync(OptimizedCacheImageProvider key) async {
-    var mngr = cacheManager ?? ImageCacheManager.getInstance();
-    var file = await mngr.getSingleFile(formattedUrl, headers: headers);
-    if (file == null) {
-      if (errorListener != null) errorListener();
-      if (onCompleteListener != null) onCompleteListener();
-      return Future<ui.Codec>.error("Couldn't download or retrieve file.");
-    }
-    if (onCompleteListener != null) onCompleteListener();
-    return await _loadAsyncFromFile(key, file);
-  }
-
-  Future<ui.Codec> _loadAsyncFromFile(
-      OptimizedCacheImageProvider key, File file) async {
-    assert(key == this);
-
-    final Uint8List bytes = await file.readAsBytes();
-
-    if (bytes.lengthInBytes == 0) {
-      if (errorListener != null) errorListener();
-      throw Exception("File was empty");
-    }
-
-    return await ui.instantiateImageCodec(bytes);
-  }
-
-  @override
-  bool operator ==(dynamic other) {
-    if (other.runtimeType != runtimeType) return false;
-    final OptimizedCacheImageProvider typedOther = other;
-    return formattedUrl == typedOther.formattedUrl && scale == typedOther.scale;
-  }
-
-  @override
-  int get hashCode => hashValues(formattedUrl, scale);
-
-  @override
-  String toString() => '$runtimeType("$formattedUrl", scale: $scale)';
+      OptimizedCacheImageProvider key, DecoderCallback decode);
 }

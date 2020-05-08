@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:optimized_cached_image/image_cache_manager.dart';
 import 'package:optimized_cached_image/widgets.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() => runApp(MyApp());
 
@@ -17,16 +20,15 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    ///This initialization is not really needed, just for the purpose of showcase.
-    /// `useHttpStream` reduces memory footprint but is experimental as of now
-    /// other params are `widthKey` and `heightKey`
-    ImageCacheManager.init(ImageCacheConfig(useHttpStream: true));
+    /// Just a demo of the param(s) in ImageCacheManager,
+    /// you don't need to do this unless you wish to customize stuff
+    ImageCacheManager.init(ImageCacheConfig(storagePath: path()));
   }
+
+  Future<Directory> path() async => (await getExternalCacheDirectories())[0];
 
   @override
   Widget build(BuildContext context) {
-    final items = 20;
-
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
@@ -57,16 +59,14 @@ class _MyAppState extends State<MyApp> {
                     cacheHeight: 50,
                     cacheWidth: 20),
               ),
-              Container(
-                  height: 300,
-                  child: GridView.count(
-                      crossAxisCount: 2,
-                      children: List.generate(items, (index) {
-                        final url = "$urlPrefix${(index + 60)}$urlSuffix";
-                        return OptimizedCacheImage(
-                          imageUrl: url,
-                        );
-                      }))),
+              //If you do not wish to use cache resizing then just unset `useScaleCacheManager`flag
+              Image(
+                image: OptimizedCacheImageProvider(
+                    "https://cdn.pixabay.com/photo/2015/03/26/09/47/sky-690293__340.jpg",
+                    useScaleCacheManager: false,
+                    cacheHeight: 50,
+                    cacheWidth: 20),
+              ),
             ],
           ),
         ),

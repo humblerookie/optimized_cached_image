@@ -60,22 +60,22 @@ image urls have a preexisting query parameters that clash with the ones this lib
 internally uses to identify image sizes namely `oci_width` and `oci_height`, all you need 
 to do is instantiate the `ImageCacheManager` with a `ImageCacheConfig` which accepts custom 
 query keys which the library can use along with a few other params.
-- `useHttpStream` : Uses chunked/streamed downloading that reduces memory footprint.
-- `maxAgeCacheObject` : Max age of the cache objects default is 30 days
-- `maxNrOfCacheObjects`:  Max number of the cache objects default is 200
      
 **Note:** Ensure `ImageCacheManager` is instantiated with this config before any load happens.
 
 To instantiate:
 ```
-ImageCacheManager.init(ImageCacheConfig(widthKey:"custom-width", heightKey:"custom-height", useHttpStream: true))
+ImageCacheManager.init(ImageCacheConfig(widthKey:"custom-width", heightKey:"custom-height", storagePath: directoryFuture()))
 ```
 
+In order to disable using cache resizing just toggle the flag `useScaleCacheManager` in (`OptimizedCacheImage`/
+`OptimizedCacheImageProvider`) and it will pick your custom manager or the default one in the 
+system rather using `ImageCacheManager`.
 
 ## How it works
 This library appends query params to the url keys for which are in `ImageCacheConfig` and interprets them while resizing.
-The optimized cached images stores and retrieves files using the [flutter_cache_manager](https://pub.dartlang.org/packages/flutter_cache_manager).
-The optimized cached images resizes files using the [flutter_image_compress](https://pub.dartlang.org/packages/flutter_image_compress). 
+The optimized cached image stores and retrieves files using the [flutter_cache_manager](https://pub.dartlang.org/packages/flutter_cache_manager).
+The optimized cached image resizes files using the [flutter_image_compress](https://pub.dartlang.org/packages/flutter_image_compress). 
 
 
 For detailed usage about all the params check out the [parent project](https://github.com/Baseflow/flutter_cached_network_image/blob/develop/example/lib/main.dart) from which this was ported.
