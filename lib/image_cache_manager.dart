@@ -76,11 +76,14 @@ class ImageCacheManager extends BaseCacheManager {
         super.getFileStream(url, headers: headers, withProgress: withProgress);
     final downStream = StreamController<FileResponse>();
     var isUpStreamClosed = false;
+    var awaitedItemsForProcessing =0;
     upStream.listen((d) async {
+      ++awaitedItemsForProcessing;
       if (d is FileInfo) {
         d = await transformer.transform(d, url);
       }
       downStream.add(d);
+      --awaitedItemsForProcessing;
       if (isUpStreamClosed) {
         unawaited(downStream.close());
       }
@@ -89,6 +92,9 @@ class ImageCacheManager extends BaseCacheManager {
       downStream.close();
     }, onDone: () {
       isUpStreamClosed = true;
+      if(awaitedItemsForProcessing==0){
+        downStream.close();
+      }
     });
     return downStream.stream;
   }
