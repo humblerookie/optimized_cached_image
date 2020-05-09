@@ -64,10 +64,12 @@ class DefaultImageTransformer extends ImageTransformer {
       File resizedFile = await FlutterImageCompress.compressAndGetFile(
           file.path, tmpFile.path,
           minWidth: minWidth, minHeight: minHeight, format: format);
-      if (resizedFile.lengthSync() < srcSize) {
-        resizedFile.renameSync(file.path);
-      } else {
-        resizedFile.deleteSync();
+      if(resizedFile.existsSync()) {
+        if (resizedFile.lengthSync() < srcSize) {
+          resizedFile.renameSync(file.path);
+        } else {
+          resizedFile.deleteSync();
+        }
       }
     }
     return info;
