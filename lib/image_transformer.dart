@@ -47,17 +47,23 @@ class DefaultImageTransformer extends ImageTransformer {
 
   Future<FileInfo> _scaleImageFile(FileInfo info, int width, int height) async {
     File file = info.file;
+    final screen = window.physicalSize;
+    var minWidth = width ?? screen.width.toInt();
+    var minHeight = height ?? screen.height.toInt();
+    if (minWidth == 0) {
+      minWidth = screen.width.toInt();
+    }
+    if (minHeight == 0) {
+      minHeight = screen.height.toInt();
+    }
     if (file.existsSync()) {
       String extension = p.extension(file.path) ?? '';
       final format = _compressionFormats[extension] ?? CompressFormat.png;
       final tmpFile = getTempFile(file, format);
       final srcSize = file.lengthSync();
-      final screen = window.physicalSize;
       File resizedFile = await FlutterImageCompress.compressAndGetFile(
           file.path, tmpFile.path,
-          minWidth: width ?? screen.width.toInt(),
-          minHeight: height ?? screen.height.toInt(),
-          format: format);
+          minWidth: minWidth, minHeight: minHeight, format: format);
       if (resizedFile.lengthSync() < srcSize) {
         resizedFile.renameSync(file.path);
       } else {
