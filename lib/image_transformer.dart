@@ -61,10 +61,9 @@ class DefaultImageTransformer extends ImageTransformer {
       final format = _compressionFormats[extension] ?? CompressFormat.png;
       final tmpFile = getTempFile(file, format);
       final srcSize = file.lengthSync();
-      File resizedFile = await FlutterImageCompress.compressAndGetFile(
-          file.path, tmpFile.path,
+      File resizedFile = await FlutterImageCompress.compressAndGetFile(file.path, tmpFile.path,
           minWidth: minWidth, minHeight: minHeight, format: format);
-      if(resizedFile.existsSync()) {
+      if (resizedFile != null && resizedFile.existsSync()) {
         if (resizedFile.lengthSync() < srcSize) {
           resizedFile.renameSync(file.path);
         } else {
