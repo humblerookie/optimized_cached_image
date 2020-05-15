@@ -1,3 +1,7 @@
+## 0.1.13
+
+* Fixed an issue around compression error handling
+
 ## 0.1.12
 
 * Fix issue with stream closure, causing some stream to remain open.
