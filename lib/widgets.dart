@@ -1,8 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
+import 'cache_manager/resize_cache_manager.dart';
 import 'image_cache_manager.dart';
 import 'image_provider/_image_provider_io.dart'
     if (dart.library.html) 'image_provider/_image_provider_web.dart'
@@ -146,9 +149,6 @@ class OptimizedCacheImage extends StatefulWidget {
   /// If not given a value, defaults to FilterQuality.low.
   final FilterQuality filterQuality;
 
-  /// Use experimental scaleCacheManager.
-  final bool useScaleCacheManager;
-
   OptimizedCacheImage({
     Key key,
     @required this.imageUrl,
@@ -173,7 +173,6 @@ class OptimizedCacheImage extends StatefulWidget {
     this.filterQuality = FilterQuality.low,
     this.colorBlendMode,
     this.placeholderFadeInDuration,
-    this.useScaleCacheManager = true,
   })  : assert(imageUrl != null),
         assert(fadeOutDuration != null),
         assert(fadeOutCurve != null),
@@ -183,7 +182,6 @@ class OptimizedCacheImage extends StatefulWidget {
         assert(filterQuality != null),
         assert(repeat != null),
         assert(matchTextDirection != null),
-        assert(useScaleCacheManager != null),
         super(key: key);
 
   @override
@@ -199,6 +197,7 @@ class _ImageTransitionHolder {
   final Object error;
   Curve curve;
   final TickerFuture forwardTickerFuture;
+  final Uint8List imageBytes;
 
   _ImageTransitionHolder({
     this.image,
@@ -206,6 +205,7 @@ class _ImageTransitionHolder {
     @required this.animationController,
     this.error,
     this.curve = Curves.easeIn,
+    this.imageBytes,
   }) : forwardTickerFuture = animationController.forward();
 
   void dispose() {
@@ -246,8 +246,9 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
       final url = _transformedUrl(constraints);
       if (url != _modifiedUrl) {
         _modifiedUrl = url;
-        _createFileStream();
+        _createFileStream(constraints);
       }
+
       return _animatedWidget();
     });
   }
@@ -278,7 +279,11 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
         _disposeImageHolders();
         _imageHolders.clear();
       }
-      _createFileStream();
+      BoxConstraints constraints = BoxConstraints(
+          maxWidth: oldWidget.width ?? double.minPositive,
+          maxHeight: oldWidget.height ?? double.minPositive);
+
+      _createFileStream(constraints);
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -289,17 +294,39 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
     super.dispose();
   }
 
-  void _createFileStream() {
-    _fromMemory = _cacheManager().getFileFromMemory(_modifiedUrl);
-    _fileResponseStream = _cacheManager()
-        .getFileStream(
-          _modifiedUrl,
+  void _createFileStream(BoxConstraints constraints) {
+    final _manager = _cacheManager();
+    _fromMemory = _manager.getFileFromMemory(_modifiedUrl);
+
+    if (widget.width != null || widget.height != null) {
+      constraints = BoxConstraints(
+          maxWidth: widget.width ?? double.minPositive,
+          maxHeight: widget.height ?? double.minPositive);
+    }
+
+    if (_manager is ImageCacheManager) {
+      final url = _transformedUrl(constraints);
+      if (url != _modifiedUrl) {
+        _modifiedUrl = url;
+        _fileResponseStream = _manager.getFileStream(_modifiedUrl,
+            headers: widget.httpHeaders,
+            withProgress: widget.progressIndicatorBuilder != null);
+      }
+    } else if (_manager is ResizeImageCacheManager) {
+      _fileResponseStream = _manager.getFileStream(widget.imageUrl,
           headers: widget.httpHeaders,
           withProgress: widget.progressIndicatorBuilder != null,
-        )
-        // ignore errors if not mounted
-        .handleError(() {}, test: (_) => !mounted)
-        .where((f) {
+          constraints: constraints);
+    } else {
+      _fileResponseStream = _manager.getFileStream(
+        widget.imageUrl,
+        headers: widget.httpHeaders,
+        withProgress: widget.progressIndicatorBuilder != null,
+      );
+    }
+
+    // ignore errors if not mounted
+    _fileResponseStream.handleError(() {}, test: (_) => !mounted).where((f) {
       if (f is FileInfo) {
         return f?.originalUrl != _fromMemory?.originalUrl ||
             f?.validTill != _fromMemory?.validTill;
@@ -314,11 +341,11 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
     }
   }
 
-  void _addImage(
-      {FileInfo image,
-      DownloadProgress progress,
-      Object error,
-      Duration duration}) {
+  void _addImage({FileInfo image,
+    DownloadProgress progress,
+    Object error,
+    Duration duration,
+    Uint8List imageBytes}) {
     if (_imageHolders.isNotEmpty) {
       var lastHolder = _imageHolders.last;
       if (lastHolder.progress != null && progress != null) {
@@ -332,7 +359,7 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
             lastHolder.animationController.duration = widget.fadeOutDuration;
           } else {
             lastHolder.animationController.duration =
-                const Duration(seconds: 1);
+            const Duration(seconds: 1);
           }
           if (widget.fadeOutCurve != null) {
             lastHolder.curve = widget.fadeOutCurve;
@@ -352,6 +379,7 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
         image: image,
         error: error,
         progress: progress,
+        imageBytes: imageBytes,
         animationController: AnimationController(
           vsync: this,
           duration: duration ??
@@ -387,7 +415,9 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
                   duration: widget.placeholderFadeInDuration ?? Duration.zero);
             }
           } else {
-            if (fileResponse is FileInfo) {
+            if (fileResponse is ImageMemoryResponse) {
+              _addImage(imageBytes: fileResponse.imageBytes);
+            } else if (fileResponse is FileInfo) {
               if (_imageHolders.isEmpty ||
                   _imageHolders.last.image?.originalUrl !=
                       fileResponse.originalUrl ||
@@ -417,6 +447,8 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
                   holder.progress.originalUrl,
                   holder.progress,
                 )));
+          } else if (holder.imageBytes != null) {
+            children.add(_imageMemory(holder.imageBytes));
           } else if (holder.image == null) {
             children.add(_transitionWidget(
                 holder: holder, child: _placeholder(context)));
@@ -451,37 +483,33 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
   }
 
   BaseCacheManager _cacheManager() {
-    if (widget.useScaleCacheManager) {
-      return ImageCacheManager();
-    } else {
-      return (widget.cacheManager ?? DefaultCacheManager());
-    }
+    return (widget.cacheManager ?? DefaultCacheManager());
   }
 
   Widget _image(BuildContext context, ImageProvider imageProvider) {
     return widget.imageBuilder != null
         ? widget.imageBuilder(context, imageProvider)
         : Image(
-            image: imageProvider,
-            fit: widget.fit,
-            width: widget.width,
-            height: widget.height,
-            alignment: widget.alignment,
-            repeat: widget.repeat,
-            color: widget.color,
-            colorBlendMode: widget.colorBlendMode,
-            matchTextDirection: widget.matchTextDirection,
-            filterQuality: widget.filterQuality,
-          );
+      image: imageProvider,
+      fit: widget.fit,
+      width: widget.width,
+      height: widget.height,
+      alignment: widget.alignment,
+      repeat: widget.repeat,
+      color: widget.color,
+      colorBlendMode: widget.colorBlendMode,
+      matchTextDirection: widget.matchTextDirection,
+      filterQuality: widget.filterQuality,
+    );
   }
 
   Widget _placeholder(BuildContext context) {
     return widget.placeholder != null
         ? widget.placeholder(context, widget.imageUrl)
         : SizedBox(
-            width: widget.width,
-            height: widget.height,
-          );
+      width: widget.width,
+      height: widget.height,
+    );
   }
 
   Widget _errorWidget(BuildContext context, Object error) {
@@ -489,23 +517,34 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
         ? widget.errorWidget(context, widget.imageUrl, error)
         : _placeholder(context);
   }
+
+  Widget _imageMemory(Uint8List imageBytes) {
+    return Image.memory(
+      imageBytes,
+      fit: widget.fit,
+      width: widget.width,
+      height: widget.height,
+      alignment: widget.alignment,
+      repeat: widget.repeat,
+      color: widget.color,
+      colorBlendMode: widget.colorBlendMode,
+      matchTextDirection: widget.matchTextDirection,
+      filterQuality: widget.filterQuality,
+    );
+  }
 }
 
-abstract class OptimizedCacheImageProvider
-    extends ImageProvider<OptimizedCacheImageProvider> {
+abstract class OptimizedCacheImageProvider extends ImageProvider<OptimizedCacheImageProvider> {
   /// Creates an object that fetches the image at the given URL.
   ///
   /// The arguments [url] and [scale] must not be null.
-  const factory OptimizedCacheImageProvider(
-      String url,
+  const factory OptimizedCacheImageProvider(String url,
       {double scale,
-      bool useScaleCacheManager,
-      @Deprecated('ErrorListener is deprecated, use listeners on the imagestream')
-          ErrorListener errorListener,
-      Map<String, String> headers,
-      BaseCacheManager cacheManager,
-      int cacheWidth,
-      int cacheHeight}) = image_provider.OptimizedCacheImageProvider;
+        @Deprecated('ErrorListener is deprecated, use listeners on the imagestream') ErrorListener errorListener,
+        Map<String, String> headers,
+        BaseCacheManager cacheManager,
+        int cacheWidth,
+        int cacheHeight}) = image_provider.OptimizedCacheImageProvider;
 
   /// Optional cache manager. If no cache manager is defined DefaultCacheManager()
   /// will be used.
@@ -537,6 +576,5 @@ abstract class OptimizedCacheImageProvider
   Map<String, String> get headers;
 
   @override
-  ImageStreamCompleter load(
-      OptimizedCacheImageProvider key, DecoderCallback decode);
+  ImageStreamCompleter load(OptimizedCacheImageProvider key, DecoderCallback decode);
 }

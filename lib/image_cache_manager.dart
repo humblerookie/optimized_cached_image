@@ -9,6 +9,7 @@ import 'package:pedantic/pedantic.dart';
 import 'image_transformer.dart';
 
 class ImageCacheManager extends BaseCacheManager {
+  static const URL_PARAM = 'url';
   final ImageCacheConfig cacheConfig;
   final ImageTransformer transformer;
 
@@ -30,8 +31,7 @@ class ImageCacheManager extends BaseCacheManager {
   /// The ScaledCacheManager that can be easily used directly. The code of
   /// this implementation can be used as inspiration for more complex cache
   /// managers.
-  factory ImageCacheManager(
-      {ImageCacheConfig cacheConfig, ImageTransformer transformer}) {
+  factory ImageCacheManager({ImageCacheConfig cacheConfig, ImageTransformer transformer}) {
     final config = cacheConfig ?? ImageCacheConfig();
     _instance ??= ImageCacheManager._(
         config, transformer ?? DefaultImageTransformer(config));
@@ -54,7 +54,8 @@ class ImageCacheManager extends BaseCacheManager {
       {Map<String, String> authHeaders, bool force = false}) async {
     var response =
         await super.downloadFile(url, authHeaders: authHeaders, force: force);
-    response = await transformer.transform(response, url);
+    response = await transformer
+        .transform(response, {DefaultImageTransformer.URL_PARAM: url});
     return response;
   }
 
@@ -73,14 +74,15 @@ class ImageCacheManager extends BaseCacheManager {
   Stream<FileResponse> getFileStream(String url,
       {Map<String, String> headers, bool withProgress}) {
     final upStream =
-        super.getFileStream(url, headers: headers, withProgress: withProgress);
+    super.getFileStream(url, headers: headers, withProgress: withProgress);
     final downStream = StreamController<FileResponse>();
     var isUpStreamClosed = false;
     var awaitedItemsForProcessing =0;
     upStream.listen((d) async {
       ++awaitedItemsForProcessing;
       if (d is FileInfo) {
-        d = await transformer.transform(d, url);
+        d = await transformer.transform(
+            d, {DefaultImageTransformer.URL_PARAM: url});
       }
       downStream.add(d);
       --awaitedItemsForProcessing;
@@ -126,7 +128,7 @@ String getDimensionSuffixedUrl(
 }
 
 abstract class ImageTransformer {
-  Future<FileInfo> transform(FileInfo info, String uri);
+  Future<FileInfo> transform(FileInfo info, Map params);
 }
 
 class ImageCacheConfig {

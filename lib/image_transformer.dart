@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'image_cache_manager.dart';
 
 class DefaultImageTransformer extends ImageTransformer {
+  static const URL_PARAM = 'url';
   final ImageCacheConfig config;
 
   DefaultImageTransformer(this.config);
@@ -30,9 +31,11 @@ class DefaultImageTransformer extends ImageTransformer {
   };
 
   @override
-  Future<FileInfo> transform(FileInfo info, String uri) async {
-    final dimens = _getDimensionsFromUrl(uri);
-    await _scaleImageFile(info, dimens[0], dimens[1]);
+  Future<FileInfo> transform(FileInfo info, Map params) async {
+    if (params.containsKey(URL_PARAM)) {
+      final dimens = _getDimensionsFromUrl(params[URL_PARAM]);
+      await _scaleImageFile(info, dimens[0], dimens[1]);
+    }
     return info;
   }
 
@@ -61,7 +64,8 @@ class DefaultImageTransformer extends ImageTransformer {
       final format = _compressionFormats[extension] ?? CompressFormat.png;
       final tmpFile = getTempFile(file, format);
       final srcSize = file.lengthSync();
-      File resizedFile = await FlutterImageCompress.compressAndGetFile(file.path, tmpFile.path,
+      File resizedFile = await FlutterImageCompress.compressAndGetFile(
+          file.path, tmpFile.path,
           minWidth: minWidth, minHeight: minHeight, format: format);
       if (resizedFile != null && resizedFile.existsSync()) {
         if (resizedFile.lengthSync() < srcSize) {
