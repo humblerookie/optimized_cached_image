@@ -34,41 +34,15 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Optimized Cached Image Example'),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: <Widget>[
-              SizedBox(
-                height: 20,
-              ),
-              Text("This is via the widget: OptimizedCacheImage"),
-              // the following Image will have width its dimensions on disk = width of device
-              // You don't need to specify width/height explicitly the widget automatically
-              // detects it based on its parent's constraints.
-              OptimizedCacheImage(
-                imageUrl: "https://i.picsum.photos/id/110/1000/300.jpg",
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              Text("This is via the provider: OptimizedCacheImageProvider"),
-              //Unlike OptimizedCacheImage, OptimizedCacheImageProvider needs cacheWidth or/and cacheHeight to resize images
-              Image(
-                image: OptimizedCacheImageProvider(
-                    "https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png",
-                    cacheHeight: 50,
-                    cacheWidth: 20),
-              ),
-              //If you do not wish to use cache resizing then just unset `useScaleCacheManager`flag
-              Image(
-                image: OptimizedCacheImageProvider(
-                    "https://cdn.pixabay.com/photo/2015/03/26/09/47/sky-690293__340.jpg",
-                    useScaleCacheManager: false,
-                    cacheHeight: 50,
-                    cacheWidth: 20),
-              ),
-            ],
-          ),
+        body: Container(
+          child: ListView.builder(
+              itemBuilder: (BuildContext context, int index) {
+                return OptimizedCacheImage(
+                  imageUrl: "https://i.picsum.photos/id/${(index + 1)}/200/300.jpg",
+                );
+              },
+              itemCount: 60,
+            ),
         ),
       ),
     );

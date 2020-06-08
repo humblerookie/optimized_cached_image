@@ -190,6 +190,7 @@ class OptimizedCacheImage extends StatefulWidget {
   OptimizedCacheImageState createState() {
     return OptimizedCacheImageState();
   }
+
 }
 
 class _ImageTransitionHolder {
