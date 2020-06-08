@@ -10,7 +10,10 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_cache_manager: ^1.2.0
-  flutter_image_compress: ^0.6.5+1
+  flutter_image_compress:
+    git:
+      url: https://github.com/humblerookie/flutter_image_compress.git
+      ref: path-resource-closure
   uuid: ^2.0.4
   http: ^0.12.0+4
   path_provider: ^1.6.5
@@ -19,8 +22,6 @@ dependencies:
 
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
   test: 1.9.4
 
 # For information on the generic Dart part of this file, see the
