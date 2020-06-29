@@ -1,3 +1,7 @@
+## 0.1.14
+
+* Fix open socket issue in compression library and allow debug mode.
+
 ## 0.1.13
 
 * Fixed an issue around compression error handling
