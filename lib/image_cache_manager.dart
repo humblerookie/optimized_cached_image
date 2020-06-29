@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:optimized_cached_image/debug_tools.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pedantic/pedantic.dart';
@@ -30,20 +32,19 @@ class ImageCacheManager extends BaseCacheManager {
   /// The ScaledCacheManager that can be easily used directly. The code of
   /// this implementation can be used as inspiration for more complex cache
   /// managers.
-  factory ImageCacheManager(
-      {ImageCacheConfig cacheConfig, ImageTransformer transformer}) {
-    final config = cacheConfig ?? ImageCacheConfig();
-    _instance ??= ImageCacheManager._(
-        config, transformer ?? DefaultImageTransformer(config));
+  factory ImageCacheManager({ImageCacheConfig cacheConfig, ImageTransformer transformer}) {
+    if(_instance ==null){
+      final config = cacheConfig ?? ImageCacheConfig();
+      Logger.enableLogging= config.enableLog;
+      _instance = ImageCacheManager._(config, transformer ?? DefaultImageTransformer(config));
+    }
     return _instance;
   }
 
   /// A named initializer for when clients wish to initialize the manager with custom config.
   /// This is purely for syntax purposes.
-  factory ImageCacheManager.init(ImageCacheConfig cacheConfig,
-      {ImageTransformer transformer}) {
-    return ImageCacheManager(
-        cacheConfig: cacheConfig, transformer: transformer);
+  factory ImageCacheManager.init(ImageCacheConfig cacheConfig, {ImageTransformer transformer}) {
+    return ImageCacheManager(cacheConfig: cacheConfig, transformer: transformer);
   }
 
   ImageCacheManager._(this.cacheConfig, this.transformer) : super(key);
@@ -52,8 +53,9 @@ class ImageCacheManager extends BaseCacheManager {
   @override
   Future<FileInfo> downloadFile(String url,
       {Map<String, String> authHeaders, bool force = false}) async {
-    var response =
-        await super.downloadFile(url, authHeaders: authHeaders, force: force);
+    log("Attempting to download $url, with headers $authHeaders");
+    var response = await super.downloadFile(url, authHeaders: authHeaders, force: force);
+    log("Attempting to transform $url");
     response = await transformer.transform(response, url);
     return response;
   }
@@ -70,13 +72,12 @@ class ImageCacheManager extends BaseCacheManager {
   /// returned from the cache there will be no progress given, although the file
   /// might be outdated and a new file is being downloaded in the background.
   @override
-  Stream<FileResponse> getFileStream(String url,
-      {Map<String, String> headers, bool withProgress}) {
-    final upStream =
-        super.getFileStream(url, headers: headers, withProgress: withProgress);
+  Stream<FileResponse> getFileStream(String url, {Map<String, String> headers, bool withProgress}) {
+    log("Attempting to get $url, from cache");
+    final upStream = super.getFileStream(url, headers: headers, withProgress: withProgress);
     final downStream = StreamController<FileResponse>();
     var isUpStreamClosed = false;
-    var awaitedItemsForProcessing =0;
+    var awaitedItemsForProcessing = 0;
     upStream.listen((d) async {
       ++awaitedItemsForProcessing;
       if (d is FileInfo) {
@@ -88,11 +89,13 @@ class ImageCacheManager extends BaseCacheManager {
         unawaited(downStream.close());
       }
     }, onError: (e) {
+      log("Error occured when downloading FileStream $url, $e");
       downStream.addError(e);
       downStream.close();
+      log("Cache retrieve failed for $url\n due to $e");
     }, onDone: () {
       isUpStreamClosed = true;
-      if(awaitedItemsForProcessing==0){
+      if (awaitedItemsForProcessing == 0) {
         downStream.close();
       }
     });
@@ -103,14 +106,12 @@ class ImageCacheManager extends BaseCacheManager {
 ///
 /// Helper method to transform image urls
 ///
-String getDimensionSuffixedUrl(
-    ImageCacheConfig config, String url, int width, int height) {
+String getDimensionSuffixedUrl(ImageCacheConfig config, String url, int width, int height) {
   Uri uri;
   try {
     uri = Uri.parse(url);
     if (uri != null) {
-      Map<String, String> queryParams =
-          Map<String, String>.from(uri.queryParameters);
+      Map<String, String> queryParams = Map<String, String>.from(uri.queryParameters);
       if (width != null) {
         queryParams[config.widthKey] = width.toString();
       }
@@ -120,7 +121,7 @@ String getDimensionSuffixedUrl(
       uri = uri.replace(queryParameters: queryParams);
     }
   } catch (e) {
-    print('Error occured while parsing url $e');
+    debugPrint('Error occured while parsing url $e');
   }
   return uri?.toString() ?? url;
 }
@@ -139,10 +140,15 @@ class ImageCacheConfig {
   /// Storage path for cache
   final Future<Directory> storagePath;
 
-  ImageCacheConfig(
-      {this.widthKey = DEFAULT_WIDTH_KEY,
-      this.heightKey = DEFAULT_HEIGHT_KEY,
-      this.storagePath});
+  /// Enable debug logs
+  final bool enableLog;
+
+  ImageCacheConfig({
+    this.widthKey = DEFAULT_WIDTH_KEY,
+    this.heightKey = DEFAULT_HEIGHT_KEY,
+    this.storagePath,
+    this.enableLog = false,
+  });
 
   static const DEFAULT_WIDTH_KEY = 'oci_width';
   static const DEFAULT_HEIGHT_KEY = 'oci_height';

@@ -5,17 +5,14 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 import 'image_cache_manager.dart';
 import 'image_provider/_image_provider_io.dart'
-    if (dart.library.html) 'image_provider/_image_provider_web.dart'
-    as image_provider;
+    if (dart.library.html) 'image_provider/_image_provider_web.dart' as image_provider;
 
 export 'package:optimized_cached_image/widgets.dart';
 
 typedef ErrorListener = void Function();
 
-typedef ImageWidgetBuilder = Widget Function(
-    BuildContext context, ImageProvider imageProvider);
-typedef PlaceholderWidgetBuilder = Widget Function(
-    BuildContext context, String url);
+typedef ImageWidgetBuilder = Widget Function(BuildContext context, ImageProvider imageProvider);
+typedef PlaceholderWidgetBuilder = Widget Function(BuildContext context, String url);
 typedef ProgressIndicatorBuilder = Widget Function(
     BuildContext context, String url, DownloadProgress progress);
 typedef LoadingErrorWidgetBuilder = Widget Function(
@@ -190,7 +187,6 @@ class OptimizedCacheImage extends StatefulWidget {
   OptimizedCacheImageState createState() {
     return OptimizedCacheImageState();
   }
-
 }
 
 class _ImageTransitionHolder {
@@ -217,8 +213,7 @@ class _ImageTransitionHolder {
   }
 }
 
-class OptimizedCacheImageState extends State<OptimizedCacheImage>
-    with TickerProviderStateMixin {
+class OptimizedCacheImageState extends State<OptimizedCacheImage> with TickerProviderStateMixin {
   final _imageHolders = <_ImageTransitionHolder>[];
   Key _streamBuilderKey = UniqueKey();
   Stream<FileResponse> _fileResponseStream;
@@ -264,8 +259,8 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
       if (height == double.infinity) {
         height = null;
       }
-      return getDimensionSuffixedUrl(_manager.cacheConfig, widget.imageUrl,
-          width?.toInt(), height?.toInt());
+      return getDimensionSuffixedUrl(
+          _manager.cacheConfig, widget.imageUrl, width?.toInt(), height?.toInt());
     } else {
       return widget.imageUrl;
     }
@@ -302,8 +297,7 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
         .handleError(() {}, test: (_) => !mounted)
         .where((f) {
       if (f is FileInfo) {
-        return f?.originalUrl != _fromMemory?.originalUrl ||
-            f?.validTill != _fromMemory?.validTill;
+        return f?.originalUrl != _fromMemory?.originalUrl || f?.validTill != _fromMemory?.validTill;
       }
       return true;
     });
@@ -315,11 +309,7 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
     }
   }
 
-  void _addImage(
-      {FileInfo image,
-      DownloadProgress progress,
-      Object error,
-      Duration duration}) {
+  void _addImage({FileInfo image, DownloadProgress progress, Object error, Duration duration}) {
     if (_imageHolders.isNotEmpty) {
       var lastHolder = _imageHolders.last;
       if (lastHolder.progress != null && progress != null) {
@@ -332,8 +322,7 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
           if (widget.fadeOutDuration != null) {
             lastHolder.animationController.duration = widget.fadeOutDuration;
           } else {
-            lastHolder.animationController.duration =
-                const Duration(seconds: 1);
+            lastHolder.animationController.duration = const Duration(seconds: 1);
           }
           if (widget.fadeOutCurve != null) {
             lastHolder.curve = widget.fadeOutCurve;
@@ -355,8 +344,7 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
         progress: progress,
         animationController: AnimationController(
           vsync: this,
-          duration: duration ??
-              (widget.fadeInDuration ?? const Duration(milliseconds: 500)),
+          duration: duration ?? (widget.fadeInDuration ?? const Duration(milliseconds: 500)),
         ),
       ),
     );
@@ -390,13 +378,10 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
           } else {
             if (fileResponse is FileInfo) {
               if (_imageHolders.isEmpty ||
-                  _imageHolders.last.image?.originalUrl !=
-                      fileResponse.originalUrl ||
-                  _imageHolders.last.image?.validTill !=
-                      fileResponse.validTill) {
+                  _imageHolders.last.image?.originalUrl != fileResponse.originalUrl ||
+                  _imageHolders.last.image?.validTill != fileResponse.validTill) {
                 _addImage(
-                    image: fileResponse,
-                    duration: _imageHolders.isNotEmpty ? null : Duration.zero);
+                    image: fileResponse, duration: _imageHolders.isNotEmpty ? null : Duration.zero);
               }
             }
             if (fileResponse is DownloadProgress) {
@@ -408,8 +393,8 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
         var children = <Widget>[];
         for (var holder in _imageHolders) {
           if (holder.error != null) {
-            children.add(_transitionWidget(
-                holder: holder, child: _errorWidget(context, holder.error)));
+            children
+                .add(_transitionWidget(holder: holder, child: _errorWidget(context, holder.error)));
           } else if (holder.progress != null) {
             children.add(_transitionWidget(
                 holder: holder,
@@ -419,8 +404,7 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
                   holder.progress,
                 )));
           } else if (holder.image == null) {
-            children.add(_transitionWidget(
-                holder: holder, child: _placeholder(context)));
+            children.add(_transitionWidget(holder: holder, child: _placeholder(context)));
           } else {
             children.add(_transitionWidget(
                 holder: holder,
@@ -445,8 +429,7 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
 
   Widget _transitionWidget({_ImageTransitionHolder holder, Widget child}) {
     return FadeTransition(
-      opacity: CurvedAnimation(
-          curve: holder.curve, parent: holder.animationController),
+      opacity: CurvedAnimation(curve: holder.curve, parent: holder.animationController),
       child: child,
     );
   }
@@ -492,8 +475,7 @@ class OptimizedCacheImageState extends State<OptimizedCacheImage>
   }
 }
 
-abstract class OptimizedCacheImageProvider
-    extends ImageProvider<OptimizedCacheImageProvider> {
+abstract class OptimizedCacheImageProvider extends ImageProvider<OptimizedCacheImageProvider> {
   /// Creates an object that fetches the image at the given URL.
   ///
   /// The arguments [url] and [scale] must not be null.
@@ -538,6 +520,5 @@ abstract class OptimizedCacheImageProvider
   Map<String, String> get headers;
 
   @override
-  ImageStreamCompleter load(
-      OptimizedCacheImageProvider key, DecoderCallback decode);
+  ImageStreamCompleter load(OptimizedCacheImageProvider key, DecoderCallback decode);
 }

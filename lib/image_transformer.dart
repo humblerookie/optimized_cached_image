@@ -6,6 +6,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 
+import 'debug_tools.dart';
 import 'image_cache_manager.dart';
 
 class DefaultImageTransformer extends ImageTransformer {
@@ -56,19 +57,25 @@ class DefaultImageTransformer extends ImageTransformer {
     if (minHeight == 0) {
       minHeight = screen.height.toInt();
     }
+    log("Scaling file.. ${info.originalUrl}");
     if (file.existsSync()) {
       String extension = p.extension(file.path) ?? '';
       final format = _compressionFormats[extension] ?? CompressFormat.png;
       final tmpFile = getTempFile(file, format);
       final srcSize = file.lengthSync();
+      log("Dimensions width=$minWidth, height=$minHeight, format $format");
       File resizedFile = await FlutterImageCompress.compressAndGetFile(file.path, tmpFile.path,
-          minWidth: minWidth, minHeight: minHeight, format: format);
+          minWidth: minWidth, minHeight: minHeight, format: format,quality: 90);
       if (resizedFile != null && resizedFile.existsSync()) {
         if (resizedFile.lengthSync() < srcSize) {
           resizedFile.renameSync(file.path);
+          log("Resized success ${info.originalUrl}");
         } else {
+          log("Resized image is bigger, deleting and using original ${info.originalUrl}");
           resizedFile.deleteSync();
         }
+      } else {
+        log("Resize Failure for ${info.originalUrl}");
       }
     }
     return info;
