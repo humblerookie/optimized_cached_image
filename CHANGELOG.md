@@ -1,3 +1,7 @@
+## 0.1.15
+
+* Syncing changes with Cached Network Image
+
 ## 0.1.14
 
 * Fix open socket issue in compression library and allow debug mode.

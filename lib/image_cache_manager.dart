@@ -32,19 +32,23 @@ class ImageCacheManager extends BaseCacheManager {
   /// The ScaledCacheManager that can be easily used directly. The code of
   /// this implementation can be used as inspiration for more complex cache
   /// managers.
-  factory ImageCacheManager({ImageCacheConfig cacheConfig, ImageTransformer transformer}) {
-    if(_instance ==null){
+  factory ImageCacheManager(
+      {ImageCacheConfig cacheConfig, ImageTransformer transformer}) {
+    if (_instance == null) {
       final config = cacheConfig ?? ImageCacheConfig();
-      Logger.enableLogging= config.enableLog;
-      _instance = ImageCacheManager._(config, transformer ?? DefaultImageTransformer(config));
+      Logger.enableLogging = config.enableLog;
+      _instance = ImageCacheManager._(
+          config, transformer ?? DefaultImageTransformer(config));
     }
     return _instance;
   }
 
   /// A named initializer for when clients wish to initialize the manager with custom config.
   /// This is purely for syntax purposes.
-  factory ImageCacheManager.init(ImageCacheConfig cacheConfig, {ImageTransformer transformer}) {
-    return ImageCacheManager(cacheConfig: cacheConfig, transformer: transformer);
+  factory ImageCacheManager.init(ImageCacheConfig cacheConfig,
+      {ImageTransformer transformer}) {
+    return ImageCacheManager(
+        cacheConfig: cacheConfig, transformer: transformer);
   }
 
   ImageCacheManager._(this.cacheConfig, this.transformer) : super(key);
@@ -54,7 +58,8 @@ class ImageCacheManager extends BaseCacheManager {
   Future<FileInfo> downloadFile(String url,
       {Map<String, String> authHeaders, bool force = false}) async {
     log("Attempting to download $url, with headers $authHeaders");
-    var response = await super.downloadFile(url, authHeaders: authHeaders, force: force);
+    var response =
+        await super.downloadFile(url, authHeaders: authHeaders, force: force);
     log("Attempting to transform $url");
     response = await transformer.transform(response, url);
     return response;
@@ -72,9 +77,11 @@ class ImageCacheManager extends BaseCacheManager {
   /// returned from the cache there will be no progress given, although the file
   /// might be outdated and a new file is being downloaded in the background.
   @override
-  Stream<FileResponse> getFileStream(String url, {Map<String, String> headers, bool withProgress}) {
+  Stream<FileResponse> getFileStream(String url,
+      {Map<String, String> headers, bool withProgress}) {
     log("Attempting to get $url, from cache");
-    final upStream = super.getFileStream(url, headers: headers, withProgress: withProgress);
+    final upStream =
+        super.getFileStream(url, headers: headers, withProgress: withProgress);
     final downStream = StreamController<FileResponse>();
     var isUpStreamClosed = false;
     var awaitedItemsForProcessing = 0;
@@ -106,12 +113,14 @@ class ImageCacheManager extends BaseCacheManager {
 ///
 /// Helper method to transform image urls
 ///
-String getDimensionSuffixedUrl(ImageCacheConfig config, String url, int width, int height) {
+String getDimensionSuffixedUrl(
+    ImageCacheConfig config, String url, int width, int height) {
   Uri uri;
   try {
     uri = Uri.parse(url);
     if (uri != null) {
-      Map<String, String> queryParams = Map<String, String>.from(uri.queryParameters);
+      Map<String, String> queryParams =
+          Map<String, String>.from(uri.queryParameters);
       if (width != null) {
         queryParams[config.widthKey] = width.toString();
       }

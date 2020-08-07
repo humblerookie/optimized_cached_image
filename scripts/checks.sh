@@ -1,0 +1,2 @@
+dartfmt -w --fix .;
+
