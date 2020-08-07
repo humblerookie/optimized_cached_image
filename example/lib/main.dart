@@ -23,7 +23,8 @@ class _MyAppState extends State<MyApp> {
 
     /// Just a demo of the param(s) in ImageCacheManager,
     /// you don't need to do this unless you wish to customize stuff
-    ImageCacheManager.init(ImageCacheConfig(storagePath: path(), enableLog: !kReleaseMode));
+    ImageCacheManager.init(
+        ImageCacheConfig(storagePath: path(), enableLog: !kReleaseMode));
   }
 
   Future<Directory> path() async => (await getExternalCacheDirectories())[0];
@@ -38,8 +39,9 @@ class _MyAppState extends State<MyApp> {
         body: Container(
           child: GridView.builder(
             padding: const EdgeInsets.all(20),
-            itemCount: 160,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4),
+            itemCount: 30,
+            gridDelegate:
+                SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4),
             itemBuilder: (BuildContext context, int index) {
               return OptimizedCacheImage(
                 imageUrl: "https://picsum.photos/id/${(index + 100)}/600/600",

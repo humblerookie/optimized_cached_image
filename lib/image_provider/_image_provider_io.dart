@@ -7,21 +7,26 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 import '../image_cache_manager.dart';
 import '../widgets.dart' as image_provider;
+import 'multi_image_stream_completer.dart';
+import 'optimized_cached_image_provider.dart';
 
 class OptimizedCacheImageProvider
     extends ImageProvider<image_provider.OptimizedCacheImageProvider>
     implements image_provider.OptimizedCacheImageProvider {
   /// Creates an ImageProvider which loads an image from the [url], using the [scale].
   /// When the image fails to load [errorListener] is called.
-  const OptimizedCacheImageProvider(this.url,
-      {this.scale = 1.0,
-      this.useScaleCacheManager = true,
-      this.errorListener,
-      this.headers,
-      this.cacheManager,
-      this.cacheWidth,
-      this.cacheHeight})
-      : assert(url != null),
+  const OptimizedCacheImageProvider(
+    this.url, {
+    this.scale = 1.0,
+    this.useScaleCacheManager = true,
+    this.errorListener,
+    this.headers,
+    this.cacheManager,
+    this.cacheWidth,
+    this.cacheHeight,
+    //ignore: avoid_unused_constructor_parameters
+    ImageRenderMethodForWeb imageRenderMethodForWeb,
+  })  : assert(url != null),
         assert(scale != null),
         assert(useScaleCacheManager != null);
 
@@ -67,8 +72,8 @@ class OptimizedCacheImageProvider
       image_provider.OptimizedCacheImageProvider key, DecoderCallback decode) {
     final StreamController<ImageChunkEvent> chunkEvents =
         StreamController<ImageChunkEvent>();
-    return MultiFrameImageStreamCompleter(
-      codec: _loadAsync(key, chunkEvents, decode).first,
+    return MultiImageStreamCompleter(
+      codec: _loadAsync(key, chunkEvents, decode),
       chunkEvents: chunkEvents.stream,
       scale: key.scale,
       informationCollector: () sync* {
