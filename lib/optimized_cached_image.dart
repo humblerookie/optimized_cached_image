@@ -1,9 +1,9 @@
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:optimized_cached_image/image_cache_manager.dart';
 import 'package:optimized_cached_image/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'octo/src/image.dart';
 
 export 'package:optimized_cached_image/widgets.dart';
@@ -95,7 +95,7 @@ class OptimizedCacheImage extends StatelessWidget {
   /// See also:
   ///
   ///  * [Alignment], a class with convenient constants typically used to
-  ///    specify an [AlignmentGeometry].
+  ///    specify an AlignmentGeometry.
   ///  * [AlignmentDirectional], like [Alignment] for specifying alignments
   ///    relative to text direction.
   final AlignmentGeometry alignment;

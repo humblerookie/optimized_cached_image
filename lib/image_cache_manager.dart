@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+// ignore: implementation_imports
+import 'package:flutter_cache_manager/src/storage/cache_object.dart';
 import 'package:optimized_cached_image/debug_tools.dart';
+import 'package:optimized_cached_image/image_provider/optimized_cached_image_provider.dart';
+import 'package:optimized_cached_image/transformer/scale_info.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pedantic/pedantic.dart';
-
-import 'image_transformer.dart';
+import 'transformer/image_transformer.dart';
 
 class ImageCacheManager extends BaseCacheManager {
   final ImageCacheConfig cacheConfig;
@@ -57,12 +59,26 @@ class ImageCacheManager extends BaseCacheManager {
   @override
   Future<FileInfo> downloadFile(String url,
       {Map<String, String> authHeaders, bool force = false}) async {
+    String parentUrl = getParentUrl(cacheConfig, url);
     log("Attempting to download $url, with headers $authHeaders");
-    var response =
-        await super.downloadFile(url, authHeaders: authHeaders, force: force);
+    var response = await super
+        .downloadFile(parentUrl, authHeaders: authHeaders, force: force);
     log("Attempting to transform $url");
-    response = await transformer.transform(response, url);
-    return response;
+    return _scaleImage(response, url, parentUrl);
+  }
+
+  /// Scale image to dimensions provided
+  Future<FileInfo> _scaleImage(
+      FileInfo response, String url, String parentUrl) async {
+    final scaledResponse = await transformer.transform(response, url);
+    if (scaledResponse.file.path != response.file.path) {
+      final orgCacheObject = await store.retrieveCacheData(parentUrl);
+      store.putFile(CacheObject(url,
+          relativePath: p.basename(scaledResponse.file.path),
+          validTill: orgCacheObject.validTill,
+          eTag: orgCacheObject.eTag));
+    }
+    return scaledResponse;
   }
 
   /// Get the file from the cache and/or online, depending on availability and age.
@@ -80,19 +96,26 @@ class ImageCacheManager extends BaseCacheManager {
   Stream<FileResponse> getFileStream(String url,
       {Map<String, String> headers, bool withProgress}) {
     log("Attempting to get $url, from cache");
-    final upStream =
-        super.getFileStream(url, headers: headers, withProgress: withProgress);
+    final parentUrl = getParentUrl(cacheConfig, url);
+    final upStream = super
+        .getFileStream(parentUrl, headers: headers, withProgress: withProgress);
     final downStream = StreamController<FileResponse>();
     var isUpStreamClosed = false;
-    var awaitedItemsForProcessing = 0;
+    var awaitedItemsForProcessing = 1;
     upStream.listen((d) async {
-      ++awaitedItemsForProcessing;
       if (d is FileInfo) {
-        d = await transformer.transform(d, url);
+        FileInfo fileInfo = d;
+        final scaledFile = transformer.getScaledFileInfo(fileInfo.file, url);
+        if (!scaledFile.file.existsSync()) {
+          d = await _scaleImage(fileInfo, url, parentUrl);
+        } else {
+          d = FileInfo(scaledFile.file, fileInfo.source, fileInfo.validTill,
+              fileInfo.originalUrl);
+        }
+        --awaitedItemsForProcessing;
       }
       downStream.add(d);
-      --awaitedItemsForProcessing;
-      if (isUpStreamClosed) {
+      if (isUpStreamClosed && awaitedItemsForProcessing == 0) {
         unawaited(downStream.close());
       }
     }, onError: (e) {
@@ -110,33 +133,9 @@ class ImageCacheManager extends BaseCacheManager {
   }
 }
 
-///
-/// Helper method to transform image urls
-///
-String getDimensionSuffixedUrl(
-    ImageCacheConfig config, String url, int width, int height) {
-  Uri uri;
-  try {
-    uri = Uri.parse(url);
-    if (uri != null) {
-      Map<String, String> queryParams =
-          Map<String, String>.from(uri.queryParameters);
-      if (width != null) {
-        queryParams[config.widthKey] = width.toString();
-      }
-      if (height != null) {
-        queryParams[config.heightKey] = height.toString();
-      }
-      uri = uri.replace(queryParameters: queryParams);
-    }
-  } catch (e) {
-    debugPrint('Error occured while parsing url $e');
-  }
-  return uri?.toString() ?? url;
-}
-
 abstract class ImageTransformer {
   Future<FileInfo> transform(FileInfo info, String uri);
+  ScaleInfo getScaledFileInfo(File file, String url);
 }
 
 class ImageCacheConfig {

@@ -16,6 +16,7 @@ dependencies:
   path: ^1.6.4
   pedantic: ^1.5.0
   flutter_blurhash: ">=0.4.1 <0.6.0"
+  sprintf: ^4.0.0
 
 
 dev_dependencies:
