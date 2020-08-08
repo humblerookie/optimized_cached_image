@@ -1,3 +1,7 @@
+## 1.0.0-beta
+
+* Prevent unnecessary downloads from happening by caching the image from the original url and resizing it for different sizes.
+
 ## 0.1.15
 
 * Syncing changes with Cached Network Image
