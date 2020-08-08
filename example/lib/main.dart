@@ -39,7 +39,7 @@ class _MyAppState extends State<MyApp> {
         body: Container(
           child: GridView.builder(
             padding: const EdgeInsets.all(20),
-            itemCount: 1,
+            itemCount: 30,
             gridDelegate:
                 SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
             itemBuilder: (BuildContext context, int index) {

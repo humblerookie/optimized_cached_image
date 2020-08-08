@@ -82,8 +82,9 @@ For detailed usage about all the params check out the [parent project](https://g
 
 ## TODO
 This library is a WIP. A few things that are going to be worked on are.
-- Prevent same url from being downloaded multiple times for different image sizes
-- Cleanup code.
+- ~~Prevent same url from being downloaded multiple times for different image sizes~~. Done
+- ~~Cleanup code.~~
+- Introduce a better memory caching scheme.
 
   
  
