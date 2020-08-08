@@ -35,13 +35,13 @@ class OctoImage extends StatefulWidget {
   /// Optional builder to further customize the display of the image.
   final OctoImageBuilder imageBuilder;
 
-  /// Widget displayed while the target [imageUrl] is loading.
+  /// Widget displayed while the target [image] is loading.
   final OctoPlaceholderBuilder placeholderBuilder;
 
-  /// Widget displayed while the target [imageUrl] is loading.
+  /// Widget displayed while the target [image] is loading.
   final OctoProgressIndicatorBuilder progressIndicatorBuilder;
 
-  /// Widget displayed while the target [imageUrl] failed loading.
+  /// Widget displayed while the target [image] failed loading.
   final OctoErrorBuilder errorBuilder;
 
   /// The duration of the fade-in animation for the [placeholderBuilder].
@@ -53,10 +53,10 @@ class OctoImage extends StatefulWidget {
   /// The curve of the fade-out animation for the [placeholderBuilder].
   final Curve fadeOutCurve;
 
-  /// The duration of the fade-in animation for the [imageUrl].
+  /// The duration of the fade-in animation for the [image].
   final Duration fadeInDuration;
 
-  /// The curve of the fade-in animation for the [imageUrl].
+  /// The curve of the fade-in animation for the [image].
   final Curve fadeInCurve;
 
   /// If non-null, require the image to have this width.
@@ -100,7 +100,7 @@ class OctoImage extends StatefulWidget {
   /// See also:
   ///
   ///  * [Alignment], a class with convenient constants typically used to
-  ///    specify an [AlignmentGeometry].
+  ///    specify an AlignmentGeometry.
   ///  * [AlignmentDirectional], like [Alignment] for specifying alignments
   ///    relative to text direction.
   final AlignmentGeometry alignment;
@@ -177,7 +177,6 @@ class OctoImage extends StatefulWidget {
   /// which corresponds to bilinear interpolation, rather than the default
   /// [FilterQuality.none] which corresponds to nearest-neighbor.
   ///
-  /// If [excludeFromSemantics] is true, then [semanticLabel] will be ignored.
   ///
   /// If [memCacheWidth] or [memCacheHeight] are provided, it indicates to the
   /// engine that the image must be decoded at the specified size. The image
@@ -243,7 +242,6 @@ class OctoImage extends StatefulWidget {
   /// which corresponds to bilinear interpolation, rather than the default
   /// [FilterQuality.none] which corresponds to nearest-neighbor.
   ///
-  /// If [excludeFromSemantics] is true, then [semanticLabel] will be ignored.
   ///
   /// If [memCacheWidth] or [memCacheHeight] are provided, it indicates to the
   /// engine that the image must be decoded at the specified size. The image

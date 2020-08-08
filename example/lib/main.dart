@@ -39,9 +39,9 @@ class _MyAppState extends State<MyApp> {
         body: Container(
           child: GridView.builder(
             padding: const EdgeInsets.all(20),
-            itemCount: 30,
+            itemCount: 1,
             gridDelegate:
-                SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4),
+                SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
             itemBuilder: (BuildContext context, int index) {
               return OptimizedCacheImage(
                 imageUrl: "https://picsum.photos/id/${(index + 100)}/600/600",

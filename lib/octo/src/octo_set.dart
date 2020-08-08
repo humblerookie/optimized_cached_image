@@ -17,13 +17,13 @@ class OctoSet {
   /// Optional builder to further customize the display of the image.
   final OctoImageBuilder imageBuilder;
 
-  /// Widget displayed while the target [imageUrl] is loading.
+  /// Widget displayed while the target [imageBuilder] is loading.
   final OctoPlaceholderBuilder placeholderBuilder;
 
-  /// Widget displayed while the target [imageUrl] is loading.
+  /// Widget displayed while the target [imageBuilder] is loading.
   final OctoProgressIndicatorBuilder progressIndicatorBuilder;
 
-  /// Widget displayed while the target [imageUrl] failed loading.
+  /// Widget displayed while the target [imageBuilder] failed loading.
   final OctoErrorBuilder errorBuilder;
 
   OctoSet._({

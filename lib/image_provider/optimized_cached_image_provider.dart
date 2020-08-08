@@ -1,6 +1,8 @@
 import 'package:flutter/painting.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:optimized_cached_image/debug_tools.dart';
+import '../image_cache_manager.dart';
 import '_image_provider_io.dart'
     if (dart.library.html) '_image_provider_web.dart' as image_provider;
 
@@ -72,4 +74,53 @@ abstract class OptimizedCacheImageProvider
   @override
   ImageStreamCompleter load(
       OptimizedCacheImageProvider key, DecoderCallback decode);
+}
+
+///
+/// Helper method to transform image urls
+///
+String getDimensionSuffixedUrl(
+    ImageCacheConfig config, String url, int width, int height) {
+  Uri uri;
+  try {
+    uri = Uri.parse(url);
+    if (uri != null) {
+      Map<String, String> queryParams =
+          Map<String, String>.from(uri.queryParameters);
+      if (width != null) {
+        queryParams[config.widthKey] = width.toString();
+      }
+      if (height != null) {
+        queryParams[config.heightKey] = height.toString();
+      }
+      uri = uri.replace(queryParameters: queryParams);
+    }
+  } catch (e) {
+    log('Error occurred while parsing url $url, $e');
+  }
+  return uri?.toString() ?? url;
+}
+
+///
+/// Helper method to transform image urls
+///
+String getParentUrl(ImageCacheConfig config, String url) {
+  Uri uri;
+  try {
+    uri = Uri.parse(url);
+    if (uri != null) {
+      Map<String, String> queryParams =
+          Map<String, String>.from(uri.queryParameters);
+      queryParams.removeWhere(
+          (key, value) => key == config.widthKey || key == config.heightKey);
+      uri = uri.replace(queryParameters: queryParams);
+    }
+  } catch (e) {
+    log('Error occurred while parsing url $url, $e');
+  }
+  var modifiedUrl = uri?.toString();
+  if (modifiedUrl != null && modifiedUrl.endsWith("?")) {
+    modifiedUrl = modifiedUrl.substring(0, modifiedUrl.length - 1);
+  }
+  return modifiedUrl ?? url;
 }

@@ -5,10 +5,10 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:optimized_cached_image/image_provider/multi_image_stream_completer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 import '../widgets.dart' show ImageRenderMethodForWeb;
 import '_load_async_web.dart';
