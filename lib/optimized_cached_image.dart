@@ -1,10 +1,10 @@
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:octo_image/octo_image.dart';
 import 'package:optimized_cached_image/image_cache_manager.dart';
 import 'package:optimized_cached_image/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'octo/src/image.dart';
 
 export 'package:optimized_cached_image/widgets.dart';
 
@@ -234,36 +234,29 @@ class OptimizedCacheImage extends StatelessWidget {
         );
       }
       return OctoImage(
-        image: _image,
-        imageBuilder: imageBuilder != null ? _octoImageBuilder : null,
-        placeholderBuilder:
-            placeholder != null ? _octoPlaceholderBuilder : null,
-        progressIndicatorBuilder: progressIndicatorBuilder != null
-            ? _octoProgressIndicatorBuilder
-            : null,
-        errorBuilder: errorWidget != null ? _octoErrorBuilder : null,
-        fadeOutDuration: fadeOutDuration,
-        fadeOutCurve: fadeOutCurve,
-        fadeInDuration: fadeInDuration,
-        fadeInCurve: fadeInCurve,
-        width: width,
-        height: height,
-        fit: fit,
-        alignment: alignment,
-        repeat: repeat,
-        matchTextDirection: matchTextDirection,
-        color: color,
-        filterQuality: filterQuality,
-        colorBlendMode: colorBlendMode,
-        placeholderFadeInDuration: placeholderFadeInDuration,
-        gaplessPlayback: useOldImageOnUrlChange,
-        memCacheWidth: constraints.maxWidth != double.infinity
-            ? constraints.maxWidth.toInt()
-            : null,
-        memCacheHeight: constraints.maxHeight != double.infinity
-            ? constraints.maxHeight.toInt()
-            : null,
-      );
+          image: _image,
+          imageBuilder: imageBuilder != null ? _octoImageBuilder : null,
+          placeholderBuilder:
+              placeholder != null ? _octoPlaceholderBuilder : null,
+          progressIndicatorBuilder: progressIndicatorBuilder != null
+              ? _octoProgressIndicatorBuilder
+              : null,
+          errorBuilder: errorWidget != null ? _octoErrorBuilder : null,
+          fadeOutDuration: fadeOutDuration,
+          fadeOutCurve: fadeOutCurve,
+          fadeInDuration: fadeInDuration,
+          fadeInCurve: fadeInCurve,
+          width: width,
+          height: height,
+          fit: fit,
+          alignment: alignment,
+          repeat: repeat,
+          matchTextDirection: matchTextDirection,
+          color: color,
+          filterQuality: filterQuality,
+          colorBlendMode: colorBlendMode,
+          placeholderFadeInDuration: placeholderFadeInDuration,
+          gaplessPlayback: useOldImageOnUrlChange);
     });
   }
 

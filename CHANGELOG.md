@@ -1,3 +1,7 @@
+## 1.0.0-rc1
+
+* Removed included octo_image library.
+
 ## 1.0.0-beta
 
 * Prevent unnecessary downloads from happening by caching the image from the original url and resizing it for different sizes.
