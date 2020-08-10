@@ -27,6 +27,9 @@ class _MyAppState extends State<MyApp> {
         ImageCacheConfig(storagePath: path(), enableLog: !kReleaseMode));
   }
 
+  /// A debug path to inspect our cache files on android.
+  /// Note this is purely for debugging and wouldn't work on ios since such a directory doesn't exist.
+  /// You're better of not passing this value to [ImageCacheManager.init]
   Future<Directory> path() async => (await getExternalCacheDirectories())[0];
 
   @override
