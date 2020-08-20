@@ -92,6 +92,8 @@ class ImageCacheManager extends BaseCacheManager {
   /// set on true and the file is not available in the cache. When the file is
   /// returned from the cache there will be no progress given, although the file
   /// might be outdated and a new file is being downloaded in the background.
+  ///
+  /// We also try and resize the file if it we don't find a file with the resized params.
   @override
   Stream<FileResponse> getFileStream(String url,
       {Map<String, String> headers, bool withProgress}) {
@@ -101,7 +103,7 @@ class ImageCacheManager extends BaseCacheManager {
         .getFileStream(parentUrl, headers: headers, withProgress: withProgress);
     final downStream = StreamController<FileResponse>();
     var isUpStreamClosed = false;
-    var awaitedItemsForProcessing = 1;
+    var isFileProcessed = false;
     upStream.listen((d) async {
       if (d is FileInfo) {
         FileInfo fileInfo = d;
@@ -112,20 +114,20 @@ class ImageCacheManager extends BaseCacheManager {
           d = FileInfo(scaledFile.file, fileInfo.source, fileInfo.validTill,
               fileInfo.originalUrl);
         }
-        --awaitedItemsForProcessing;
+        isFileProcessed = true;
       }
       downStream.add(d);
-      if (isUpStreamClosed && awaitedItemsForProcessing == 0) {
+      if (isUpStreamClosed && isFileProcessed) {
         unawaited(downStream.close());
       }
     }, onError: (e) {
-      log("Error occured when downloading FileStream $url, $e");
+      log("Error occurred when downloading FileStream $url, $e");
       downStream.addError(e);
       downStream.close();
       log("Cache retrieve failed for $url\n due to $e");
     }, onDone: () {
       isUpStreamClosed = true;
-      if (awaitedItemsForProcessing == 0) {
+      if (isFileProcessed) {
         downStream.close();
       }
     });
