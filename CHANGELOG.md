@@ -1,3 +1,7 @@
+## 1.0.0
+
+* Release to Pub
+
 ## 1.0.0-rc1
 
 * Removed included octo_image library.
