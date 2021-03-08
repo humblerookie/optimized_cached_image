@@ -1,6 +1,6 @@
 ## 2.0.0-dev.1
 
-* Update with flutter cache manager dependency and `CachedNetworkImage`.
+* Update with flutter cache manager dependency and `CachedNetworkImage`. Introduces breaking api changes.
 
 ## 1.0.0
 
