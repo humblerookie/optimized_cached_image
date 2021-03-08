@@ -1,3 +1,7 @@
+## 2.0.0-dev.1
+
+* Update with flutter cache manager dependency and `CachedNetworkImage`.
+
 ## 1.0.0
 
 * Release to Pub

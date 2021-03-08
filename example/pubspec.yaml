@@ -16,12 +16,6 @@ dependencies:
   optimized_cached_image:
     path: ../
   file: ^6.1.0
-  path_provider: ^2.0.1
-  path: ^1.8.0
-
-dependency_overrides:
-  path_provider: ^2.0.1
-  path: ^1.8.0
 
 dev_dependencies:
   flutter_test:

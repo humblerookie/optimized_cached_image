@@ -12,16 +12,11 @@ dependencies:
   flutter_image_compress: ^0.7.0
   uuid: ^2.0.4
   http: ^0.12.0+4
-  path_provider: ^2.0.1
+  path_provider: ^1.6.18
   path: ^1.8.0
-  pedantic: ^1.5.0
-  flutter_blurhash: ">=0.4.1 <0.6.0"
+  pedantic: ^1.8.0+1
   sprintf: ^4.0.0
-  octo_image: ">=0.1.0 <0.3.0"
-
-dependency_overrides:
-  path_provider: ^2.0.1
-  path: ^1.8.0
-
+  octo_image: ^0.3.0
+  image: ^2.1.18
 dev_dependencies:
   test: 1.9.4
