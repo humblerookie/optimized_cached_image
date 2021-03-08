@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:image/image.dart';
-
 import '../transformer/image_transformer.dart';
 
 const supportedFileNames = ['jpg', 'jpeg', 'png', 'tga', 'gif', 'cur', 'ico'];
