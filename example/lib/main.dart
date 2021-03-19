@@ -101,10 +101,7 @@ class _AppHomeState extends State<AppHome> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).bottomAppBarColor,
         title: Center(
-          child: Image.asset(
-            'res/images/baseflow_logo_def_light-02.png',
-            width: 140,
-          ),
+          child: Text("OptimizedCachedImage"),
         ),
       ),
       backgroundColor: Theme.of(context).backgroundColor,

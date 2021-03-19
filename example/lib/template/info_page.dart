@@ -20,11 +20,7 @@ class InfoPage extends StatelessWidget {
               children: <Widget>[
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Image.asset(
-                    'res/images/poweredByBaseflowLogoLight@3x.png',
-                    width: 250,
-                    alignment: Alignment.centerLeft,
-                  ),
+                  child: Text("OptimizedCachedImage by humblerookie"),
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 24),

@@ -1,3 +1,7 @@
+## 2.0.0-dev.2
+
+* Fix issues with file package conflicting with dart io.
+
 ## 2.0.0-dev.1
 
 * Update with flutter cache manager dependency and `CachedNetworkImage`. Introduces breaking api changes.
