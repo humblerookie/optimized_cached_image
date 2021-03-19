@@ -10,6 +10,52 @@ class BasicContent extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            _blurHashImage(),
+            _sizedContainer(
+              const Image(
+                image: OptimizedCacheImageProvider(
+                  'https://via.placeholder.com/350x150',
+                ),
+              ),
+            ),
+            _sizedContainer(
+              OptimizedCacheImage(
+                progressIndicatorBuilder: (context, url, progress) => Center(
+                  child: CircularProgressIndicator(
+                    value: progress.progress,
+                  ),
+                ),
+                imageUrl:
+                    'https://images.unsplash.com/photo-1532264523420-881a47db012d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9',
+              ),
+            ),
+            _sizedContainer(
+              OptimizedCacheImage(
+                placeholder: (context, url) =>
+                    const CircularProgressIndicator(),
+                imageUrl: 'https://via.placeholder.com/200x150',
+              ),
+            ),
+            _sizedContainer(
+              OptimizedCacheImage(
+                imageUrl: 'https://via.placeholder.com/300x150',
+                imageBuilder: (context, imageProvider) => Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: imageProvider,
+                      fit: BoxFit.cover,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.red,
+                        BlendMode.colorBurn,
+                      ),
+                    ),
+                  ),
+                ),
+                placeholder: (context, url) =>
+                    const CircularProgressIndicator(),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
+              ),
+            ),
             OptimizedCacheImage(
               imageUrl: 'https://via.placeholder.com/300x300',
               placeholder: (context, url) => const CircleAvatar(
@@ -50,6 +96,20 @@ class BasicContent extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _blurHashImage() {
+    return SizedBox(
+      width: double.infinity,
+      child: OptimizedCacheImage(
+        placeholder: (context, url) => const AspectRatio(
+          aspectRatio: 1.6,
+          child: BlurHash(hash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj'),
+        ),
+        imageUrl: 'https://blurha.sh/assets/images/img1.jpg',
+        fit: BoxFit.cover,
       ),
     );
   }
