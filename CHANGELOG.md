@@ -1,3 +1,7 @@
+## 2.0.0
+
+* Update flutter cache manager dependency and other pub dependencies
+
 ## 2.0.0-dev.2
 
 * Fix issues with file package conflicting with dart io.
