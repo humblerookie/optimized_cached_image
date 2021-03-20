@@ -70,11 +70,7 @@ class InfoPage extends StatelessWidget {
       margin: const EdgeInsets.only(top: 24.0),
       alignment: Alignment.center,
       child: SizedBox.expand(
-        child: RaisedButton(
-          textTheme: Theme.of(context).buttonTheme.textTheme,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
-          padding: const EdgeInsets.all(8),
+        child: ElevatedButton(
           child: Text(text),
           onPressed: () => _launchURL(url),
         ),
