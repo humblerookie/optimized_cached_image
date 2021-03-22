@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/optimized_cached_image.svg)](https://pub.dartlang.org/packages/optimized_cached_image)
 
-A flutter library for loading images from network, resizing and caching them for memory sensitivity. 
+A flutter library for loading images from network, resizing and caching them for memory sensitivity.
 This resizes and stores the images in cache based on parent container constraints and hence
 loads images of lower size into memory. This is heavily inspired by [cached_network_image](https://pub.dev/packages/cached_network_image) library.
 
@@ -10,11 +10,11 @@ This library exposes two classes for loading images
 - `OptimizedCacheImage` which is a 1:1 mapping of `CachedNetworkImage`.
 - `OptimizedCacheImageProvider` which is a mapping of `CachedNetworkImageProvider`.
 
-A flutter library to show images from the internet and keep them in the cache directory.
-
 ## How to use
-The CachedNetworkImage can be used directly or through the ImageProvider.
+The OptimizedCacheImage can be used directly or through the ImageProvider.
+Both the OptimizedCacheImage as OptimizedCacheImageProvider have minimal support for web. It currently doesn't include caching.
 
+With a placeholder:
 ```dart
 OptimizedCacheImage(
         imageUrl: "http://via.placeholder.com/350x150",
@@ -22,18 +22,20 @@ OptimizedCacheImage(
         errorWidget: (context, url, error) => Icon(Icons.error),
      ),
  ```
-and that's it, you don't need to specify any explicit sizes images will be loaded based on available space in the container. However In case you feel auto size doesn't work for you feel free to specify `width` and `height` params.
+ 
+ Or with a progress indicator:
+ ```dart
+OptimizedCacheImage(
+        imageUrl: "http://via.placeholder.com/350x150",
+        progressIndicatorBuilder: (context, url, downloadProgress) =>
+                CircularProgressIndicator(value: downloadProgress.progress),
+        errorWidget: (context, url, error) => Icon(Icons.error),
+     ),
+ ```
 
 
-If you're using the provider you'd have to specify `cacheWidth` or `cacheHeight` in order for resize to work. You can wrap it inside [LayoutBuilder](https://api.flutter.dev/flutter/widgets/LayoutBuilder-class.html) or specify an explicity size
 ````dart
-LayoutBuilder(builder: (_, constraints) {
-  Image(image: OptimizedCacheImageProvider(url, cacheWidth:constraints.maxWidth))
-})
-````
-or
-````dart
-Image(image: OptimizedCacheImageProvider(url, cacheWidth:100))
+Image(image: OptimizedCacheImageProvider(url))
 ````
 
 When you want to have both the placeholder functionality and want to get the imageprovider to use in another widget you can provide an imageBuilder:
@@ -54,37 +56,9 @@ OptimizedCacheImage(
 ),
 ```
 
-## Advanced Usage
-This library modifies/appends url query params to demarcate different sizes. In case your 
-image urls have a preexisting query parameters that clash with the ones this library 
-internally uses to identify image sizes namely `oci_width` and `oci_height`, all you need 
-to do is instantiate the `ImageCacheManager` with a `ImageCacheConfig` which accepts custom 
-query keys which the library can use along with a few other params.
-     
-**Note:** Ensure `ImageCacheManager` is instantiated with this config before any load happens.
-
-To instantiate:
-```
-ImageCacheManager.init(ImageCacheConfig(widthKey:"custom-width", heightKey:"custom-height", storagePath: directoryFuture()))
-```
-
-In order to disable using cache resizing just toggle the flag `useScaleCacheManager` in (`OptimizedCacheImage`/
-`OptimizedCacheImageProvider`) and it will pick your custom manager or the default one in the 
-system rather using `ImageCacheManager`.
-
 ## How it works
-This library appends query params to the url keys for which are in `ImageCacheConfig` and interprets them while resizing.
-The optimized cached image stores and retrieves files using the [flutter_cache_manager](https://pub.dartlang.org/packages/flutter_cache_manager).
-The optimized cached image resizes files using the [flutter_image_compress](https://pub.dartlang.org/packages/flutter_image_compress). 
+The optimized cached network images stores and retrieves files using the [optimized_cached_image](https://pub.dev/packages/optimized_cached_image).
 
-
-For detailed usage about all the params check out the [parent project](https://github.com/Baseflow/flutter_cached_network_image/blob/develop/example/lib/main.dart) from which this was ported.
-
-## TODO
-This library is a WIP. A few things that are going to be worked on are.
-- ~~Prevent same url from being downloaded multiple times for different image sizes~~. Done
-- ~~Cleanup code.~~
-- Introduce a better memory caching scheme.
-
-  
- 
+## FAQ
+### My app crashes when the image loading failed. (I know, this is not really a question.)
+Does it really crash though? The debugger might pause, as the Dart VM doesn't recognize it as a caught exception; the console might print errors; even your crash reporting tool might report it (I know, that really sucks). However, does it really crash? Probably everything is just running fine. If you really get an app crashes you are fine to report an issue, but do that with a small example so we can reproduce that crash.
