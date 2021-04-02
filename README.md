@@ -55,9 +55,11 @@ OptimizedCacheImage(
   errorWidget: (context, url, error) => Icon(Icons.error),
 ),
 ```
+##Handling Gifs
+OCI uses [Flutter Image Compress](https://pub.dev/packages/flutter_image_compress) as the compression library, while being memory efficient this library doesn't provide out of box support for gifs, however it does allow compressing to webp. Hence all gifs are compressed to webp format beginning `2.0.2-alpha`.
 
 ## How it works
-The optimized cached network images stores and retrieves files using the [optimized_cached_image](https://pub.dev/packages/optimized_cached_image).
+The optimized cached network images stores and retrieves files using the [flutter_cache_manager](https://pub.dev/packages/flutter_cache_manager).
 
 ## FAQ
 ### My app crashes when the image loading failed. (I know, this is not really a question.)
