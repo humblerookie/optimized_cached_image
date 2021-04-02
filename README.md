@@ -55,7 +55,8 @@ OptimizedCacheImage(
   errorWidget: (context, url, error) => Icon(Icons.error),
 ),
 ```
-##Handling Gifs
+
+## Handling Gifs
 OCI uses [Flutter Image Compress](https://pub.dev/packages/flutter_image_compress) as the compression library, while being memory efficient this library doesn't provide out of box support for gifs, however it does allow compressing to webp. Hence all gifs are compressed to webp format beginning `2.0.2-alpha`.
 
 ## How it works
