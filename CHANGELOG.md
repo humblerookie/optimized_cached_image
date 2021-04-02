@@ -1,3 +1,7 @@
+## 2.0.2-alpha
+
+* Limited gif support. Gifs are compressed into webp and rendered as of now.
+
 ## 2.0.1
 
 * Update to null safety package dependencies. OCI still needs to migrate code to respect null safety. Additionally fix issue with hero widgets
