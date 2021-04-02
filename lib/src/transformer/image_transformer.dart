@@ -19,8 +19,9 @@ class DefaultImageTransformer extends ImageTransformer {
     '.jpg': CompressFormat.jpeg,
     '.jpeg': CompressFormat.jpeg,
     '.webp': CompressFormat.webp,
+    '.gif': CompressFormat.webp,
     '.png': CompressFormat.png,
-    '.heic': CompressFormat.heic,
+    '.heic': CompressFormat.heic
   };
   final _extensionFormats = {
     CompressFormat.jpeg: '.jpg',
@@ -28,7 +29,7 @@ class DefaultImageTransformer extends ImageTransformer {
     CompressFormat.png: '.png',
     CompressFormat.heic: '.heic'
   };
-
+  final _skippedFormats = {'.gif': true};
   @override
   Future<FileInfo> transform(FileInfo info, int width, int height) async {
     final value = await _scaleImageFile(info, width, height);
@@ -40,7 +41,8 @@ class DefaultImageTransformer extends ImageTransformer {
     final file = fileInfo.file;
     log("Scaling file.. ${fileInfo.originalUrl}");
     var resizedFile = file;
-    if (file.existsSync() && (width != null || height != null)) {
+    final canResize = file.existsSync() && (width != null || height != null);
+    if (canResize) {
       final scaleInfo = getScaledFileInfo(file, width, height);
       final srcSize = file.lengthSync();
       log("Dimensions width=${scaleInfo.width}, height=${scaleInfo.height}, format ${scaleInfo.compressFormat}");
@@ -52,6 +54,7 @@ class DefaultImageTransformer extends ImageTransformer {
           quality: 90);
       final localFileSystem = fileIo.LocalFileSystem();
       resizedFile = localFileSystem.file(scaleInfo.file.path);
+
       if (resizedFile != null && resizedFile.existsSync()) {
         if (resizedFile.lengthSync() < srcSize) {
           log("Resized success ${fileInfo.originalUrl}");

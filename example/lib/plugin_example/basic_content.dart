@@ -14,7 +14,7 @@ class BasicContent extends StatelessWidget {
             _sizedContainer(
               const Image(
                 image: OptimizedCacheImageProvider(
-                  'https://via.placeholder.com/350x150',
+                  "https://sample-videos.com/gif/3.gif",
                 ),
               ),
             ),
