@@ -249,7 +249,7 @@ class OptimizedCacheImage extends StatelessWidget {
     var octoProgressIndicatorBuilder =
         progressIndicatorBuilder != null ? _octoProgressIndicatorBuilder : null;
 
-    ///If there is no placeholer OctoImage does not fade, so always set an
+    ///If there is no placeholder OctoImage does not fade, so always set an
     ///(empty) placeholder as this always used to be the behaviour of
     ///OptimizedCacheImage.
     if (octoPlaceholderBuilder == null &&
@@ -258,16 +258,18 @@ class OptimizedCacheImage extends StatelessWidget {
     }
 
     return LayoutBuilder(builder: (ctx, constraints) {
-      var _constrainWidth = memCacheWidth;
-      var _constrainHeight = memCacheHeight;
+      var _constrainWidth = width?.toInt() ?? maxWidthDiskCache;
+      var _constrainHeight = height?.toInt() ?? maxHeightDiskCache;
 
       final ratio = MediaQuery.of(context).devicePixelRatio;
-      _constrainWidth = constraints.maxWidth != double.infinity
-          ? (constraints.maxWidth * ratio).toInt()
-          : null;
-      _constrainHeight = constraints.maxHeight != double.infinity
-          ? (constraints.maxHeight * ratio).toInt()
-          : null;
+      if (_constrainWidth == null && _constrainHeight == null) {
+        _constrainWidth = constraints.maxWidth != double.infinity
+            ? (constraints.maxWidth * ratio).toInt()
+            : null;
+        _constrainHeight = constraints.maxHeight != double.infinity
+            ? (constraints.maxHeight * ratio).toInt()
+            : null;
+      }
       if (_image == null ||
           _image.maxHeight != _constrainHeight ||
           _image.maxWidth != _constrainHeight) {

@@ -1,3 +1,7 @@
+## 2.0.1
+
+* Update to null safety package dependencies. OCI still needs to migrate code to respect null safety. Additionally fix issue with hero widgets
+
 ## 2.0.0
 
 * Update flutter cache manager dependency and other pub dependencies
