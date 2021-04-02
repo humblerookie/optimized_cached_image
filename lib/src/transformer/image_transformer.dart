@@ -29,7 +29,7 @@ class DefaultImageTransformer extends ImageTransformer {
     CompressFormat.png: '.png',
     CompressFormat.heic: '.heic'
   };
-  final _skippedFormats = {'.gif': true};
+
   @override
   Future<FileInfo> transform(FileInfo info, int width, int height) async {
     final value = await _scaleImageFile(info, width, height);
