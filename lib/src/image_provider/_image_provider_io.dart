@@ -29,12 +29,12 @@ class OptimizedCacheImageProvider
     this.cacheManager,
     this.cacheKey,
     //ignore: avoid_unused_constructor_parameters
-    ImageRenderMethodForWeb imageRenderMethodForWeb,
+    ImageRenderMethodForWeb? imageRenderMethodForWeb,
   })  : assert(url != null),
         assert(scale != null);
 
   @override
-  final BaseCacheManager cacheManager;
+  final BaseCacheManager? cacheManager;
 
   /// Web url of the image to load
   @override
@@ -42,7 +42,7 @@ class OptimizedCacheImageProvider
 
   /// Cache key of the image to cache
   @override
-  final String cacheKey;
+  final String? cacheKey;
 
   /// Scale of the image
   @override
@@ -50,17 +50,17 @@ class OptimizedCacheImageProvider
 
   /// Listener to be called when images fails to load.
   @override
-  final image_provider.ErrorListener errorListener;
+  final image_provider.ErrorListener? errorListener;
 
   /// Set headers for the image provider, for example for authentication
   @override
-  final Map<String, String> headers;
+  final Map<String, String>? headers;
 
   @override
-  final int maxHeight;
+  final int? maxHeight;
 
   @override
-  final int maxWidth;
+  final int? maxWidth;
 
   @override
   Future<OptimizedCacheImageProvider> obtainKey(
@@ -73,7 +73,7 @@ class OptimizedCacheImageProvider
       image_provider.OptimizedCacheImageProvider key, DecoderCallback decode) {
     final chunkEvents = StreamController<ImageChunkEvent>();
     return MultiImageStreamCompleter(
-      codec: _loadAsync(key, chunkEvents, decode),
+      codec: _loadAsync(key as OptimizedCacheImageProvider, chunkEvents, decode),
       chunkEvents: chunkEvents.stream,
       scale: key.scale,
       informationCollector: () sync* {
@@ -130,7 +130,7 @@ class OptimizedCacheImageProvider
       // have had a chance to track the key in the cache at all.
       // Schedule a microtask to give the cache a chance to add the key.
       scheduleMicrotask(() {
-        PaintingBinding.instance.imageCache.evict(key);
+        PaintingBinding.instance!.imageCache!.evict(key);
       });
 
       errorListener?.call();

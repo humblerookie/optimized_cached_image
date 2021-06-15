@@ -19,15 +19,15 @@ mixin OicImageCacheManager on BaseCacheManager {
 
   Stream<FileResponse> getImageFile(
     String url, {
-    String key,
-    Map<String, String> headers,
-    bool withProgress,
-    int maxHeight,
-    int maxWidth,
+    String? key,
+    Map<String, String>? headers,
+    bool? withProgress,
+    int? maxHeight,
+    int? maxWidth,
   }) async* {
     if (maxHeight == null && maxWidth == null) {
       yield* getFileStream(url,
-          key: key, headers: headers, withProgress: withProgress);
+          key: key, headers: headers, withProgress: withProgress!);
       return;
     }
     key ??= url;
@@ -50,12 +50,12 @@ mixin OicImageCacheManager on BaseCacheManager {
         key,
         resizedKey,
         headers,
-        withProgress,
+        withProgress!,
         maxWidth: maxWidth,
         maxHeight: maxHeight,
       );
     }
-    yield* _runningResizes[resizedKey];
+    yield* _runningResizes[resizedKey]!;
     _runningResizes.remove(resizedKey);
   }
 
@@ -63,8 +63,8 @@ mixin OicImageCacheManager on BaseCacheManager {
   Future<FileInfo> _resizeImageFile(
     FileInfo originalFile,
     String key,
-    int maxWidth,
-    int maxHeight,
+    int? maxWidth,
+    int? maxHeight,
   ) async {
     var originalFileName = originalFile.file.path;
     var fileExtension = originalFileName.split('.').last;
@@ -74,7 +74,7 @@ mixin OicImageCacheManager on BaseCacheManager {
 
     var image = decodeImage(await originalFile.file.readAsBytes());
     if (maxWidth != null && maxHeight != null) {
-      var resizeFactorWidth = image.width / maxWidth;
+      var resizeFactorWidth = image!.width / maxWidth;
       var resizeFactorHeight = image.height / maxHeight;
       var resizeFactor = max(resizeFactorHeight, resizeFactorWidth);
 
@@ -106,10 +106,10 @@ mixin OicImageCacheManager on BaseCacheManager {
     String url,
     String originalKey,
     String resizedKey,
-    Map<String, String> headers,
+    Map<String, String>? headers,
     bool withProgress, {
-    int maxWidth,
-    int maxHeight,
+    int? maxWidth,
+    int? maxHeight,
   }) async* {
     await for (var response in getFileStream(
       url,
