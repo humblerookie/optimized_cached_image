@@ -43,7 +43,7 @@ abstract class OptimizedCacheImageProvider
     int? maxHeight,
     int? maxWidth,
     String? cacheKey,
-    required double scale,
+    double scale,
     @Deprecated('ErrorListener is deprecated, use listeners on the imagestream')
         ErrorListener? errorListener,
     Map<String, String>? headers,
