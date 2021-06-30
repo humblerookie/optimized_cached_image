@@ -7,7 +7,7 @@ import '../../optimized_cached_image.dart';
 
 /// Method to load html images using the webOnlyInstantiateImageCodecFromUrl.
 /// This method is not recognized by the flutter analyzer.
-Future<ui.Codec> loadAsyncHtmlImage(
+Future<ui.Codec>? loadAsyncHtmlImage(
   OptimizedCacheImageProvider key,
   StreamController<ImageChunkEvent> chunkEvents,
   DecoderCallback decode,
@@ -24,5 +24,5 @@ Future<ui.Codec> loadAsyncHtmlImage(
         ),
       );
     },
-  ) as Future<ui.Codec>;
+  ) as Future<ui.Codec>?;
 }

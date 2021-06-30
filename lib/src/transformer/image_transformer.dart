@@ -31,12 +31,12 @@ class DefaultImageTransformer extends ImageTransformer {
   };
 
   @override
-  Future<FileInfo> transform(FileInfo info, int width, int height) async {
+  Future<FileInfo> transform(FileInfo info, int? width, int? height) async {
     final value = await _scaleImageFile(info, width, height);
     return value;
   }
 
-  Future<FileInfo> _scaleImageFile(FileInfo info, int width, int height) async {
+  Future<FileInfo> _scaleImageFile(FileInfo info, int? width, int? height) async {
     FileInfo fileInfo = info;
     final file = fileInfo.file;
     log("Scaling file.. ${fileInfo.originalUrl}");
@@ -74,7 +74,7 @@ class DefaultImageTransformer extends ImageTransformer {
   }
 
   @override
-  ScaleInfo getScaledFileInfo(File file, int width, int height) {
+  ScaleInfo getScaledFileInfo(File file, int? width, int? height) {
     final format = _getCompressionFormat(file);
 
     final directory = file.parent;
@@ -82,7 +82,7 @@ class DefaultImageTransformer extends ImageTransformer {
         "/" +
         p.basenameWithoutExtension(file.path) +
         sprintf(tmpFileSuffix, [width ?? 1, height ?? 1]) +
-        _extensionFormats[format];
+        _extensionFormats[format]!;
     final scaleFile = File(destPath);
     return ScaleInfo(scaleFile, width ?? 1, height ?? 1, format);
   }
@@ -94,6 +94,6 @@ class DefaultImageTransformer extends ImageTransformer {
 }
 
 abstract class ImageTransformer {
-  Future<FileInfo> transform(FileInfo info, int width, int height);
+  Future<FileInfo> transform(FileInfo info, int? width, int? height);
   ScaleInfo getScaledFileInfo(File file, int width, int height);
 }
