@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:math';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:image/image.dart';
+import 'package:file/file.dart';
 import '../transformer/image_transformer.dart';
+import 'dart:ui' as ui;
 
 const supportedFileNames = ['jpg', 'jpeg', 'png', 'tga', 'gif', 'cur', 'ico'];
 mixin OicImageCacheManager on BaseCacheManager {
@@ -19,11 +23,11 @@ mixin OicImageCacheManager on BaseCacheManager {
 
   Stream<FileResponse> getImageFile(
     String url, {
-    String key,
-    Map<String, String> headers,
-    bool withProgress,
-    int maxHeight,
-    int maxWidth,
+    String? key,
+    Map<String, String>? headers,
+    bool withProgress = false,
+    int? maxHeight,
+    int? maxWidth,
   }) async* {
     if (maxHeight == null && maxWidth == null) {
       yield* getFileStream(url,
@@ -55,7 +59,7 @@ mixin OicImageCacheManager on BaseCacheManager {
         maxHeight: maxHeight,
       );
     }
-    yield* _runningResizes[resizedKey];
+    yield* _runningResizes[resizedKey]!;
     _runningResizes.remove(resizedKey);
   }
 
@@ -63,8 +67,8 @@ mixin OicImageCacheManager on BaseCacheManager {
   Future<FileInfo> _resizeImageFile(
     FileInfo originalFile,
     String key,
-    int maxWidth,
-    int maxHeight,
+    int? maxWidth,
+    int? maxHeight,
   ) async {
     var originalFileName = originalFile.file.path;
     var fileExtension = originalFileName.split('.').last;
@@ -72,7 +76,15 @@ mixin OicImageCacheManager on BaseCacheManager {
       return originalFile;
     }
 
-    var image = decodeImage(await originalFile.file.readAsBytes());
+    var image = await _decodeImage(originalFile.file);
+    var shouldResize = maxWidth != null
+        ? image.width > maxWidth
+        : false || maxHeight != null
+            ? image.height > maxHeight
+            : false;
+
+    if (!shouldResize) return originalFile;
+
     if (maxWidth != null && maxHeight != null) {
       var resizeFactorWidth = image.width / maxWidth;
       var resizeFactorHeight = image.height / maxHeight;
@@ -106,10 +118,10 @@ mixin OicImageCacheManager on BaseCacheManager {
     String url,
     String originalKey,
     String resizedKey,
-    Map<String, String> headers,
+    Map<String, String>? headers,
     bool withProgress, {
-    int maxWidth,
-    int maxHeight,
+    int? maxWidth,
+    int? maxHeight,
   }) async* {
     await for (var response in getFileStream(
       url,
@@ -130,4 +142,22 @@ mixin OicImageCacheManager on BaseCacheManager {
       }
     }
   }
+}
+
+Future<ui.Image> _decodeImage(File file,
+    {int? width, int? height, bool allowUpscaling = false}) {
+  var shouldResize = width != null || height != null;
+  var fileImage = FileImage(file);
+  final image = shouldResize
+      ? ResizeImage(fileImage,
+          width: width, height: height, allowUpscaling: allowUpscaling)
+      : fileImage as ImageProvider;
+  final completer = Completer<ui.Image>();
+  image
+      .resolve(const ImageConfiguration())
+      .addListener(ImageStreamListener((info, _) {
+    completer.complete(info.image);
+    image.evict();
+  }));
+  return completer.future;
 }
