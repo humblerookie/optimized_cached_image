@@ -7,10 +7,10 @@ import 'package:optimized_cached_image/src/cache/image_cache_manager.dart';
 class DefaultImageCacheManager extends CacheManager with OicImageCacheManager {
   static const key = 'libCachedImageData';
 
-  static DefaultImageCacheManager _instance;
+  static DefaultImageCacheManager? _instance;
   factory DefaultImageCacheManager() {
     _instance ??= DefaultImageCacheManager._();
-    return _instance;
+    return _instance!;
   }
   DefaultImageCacheManager._() : super(Config(key));
 }

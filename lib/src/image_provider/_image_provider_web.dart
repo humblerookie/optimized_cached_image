@@ -26,36 +26,34 @@ class OptimizedCacheImageProvider
     this.headers,
     this.cacheManager,
     this.cacheKey,
-    ImageRenderMethodForWeb imageRenderMethodForWeb,
+    ImageRenderMethodForWeb? imageRenderMethodForWeb,
   })  : _imageRenderMethodForWeb =
-            imageRenderMethodForWeb ?? ImageRenderMethodForWeb.HtmlImage,
-        assert(url != null),
-        assert(scale != null);
+            imageRenderMethodForWeb ?? ImageRenderMethodForWeb.HtmlImage;
 
   @override
-  final BaseCacheManager cacheManager;
+  final BaseCacheManager? cacheManager;
 
   @override
   final String url;
 
   @override
-  final String cacheKey;
+  final String? cacheKey;
 
   @override
   final double scale;
 
   /// Listener to be called when images fails to load.
   @override
-  final image_provider.ErrorListener errorListener;
+  final image_provider.ErrorListener? errorListener;
 
   @override
-  final Map<String, String> headers;
+  final Map<String, String>? headers;
 
   @override
-  final int maxHeight;
+  final int? maxHeight;
 
   @override
-  final int maxWidth;
+  final int? maxWidth;
 
   final ImageRenderMethodForWeb _imageRenderMethodForWeb;
 
@@ -78,9 +76,9 @@ class OptimizedCacheImageProvider
         informationCollector: _imageStreamInformationCollector(key));
   }
 
-  InformationCollector _imageStreamInformationCollector(
+  InformationCollector? _imageStreamInformationCollector(
       image_provider.OptimizedCacheImageProvider key) {
-    InformationCollector collector;
+    InformationCollector? collector;
     assert(() {
       collector = () {
         return <DiagnosticsNode>[
@@ -137,7 +135,7 @@ class OptimizedCacheImageProvider
       // have had a chance to track the key in the cache at all.
       // Schedule a microtask to give the cache a chance to add the key.
       scheduleMicrotask(() {
-        PaintingBinding.instance.imageCache.evict(key);
+        PaintingBinding.instance?.imageCache?.evict(key);
       });
 
       errorListener?.call();

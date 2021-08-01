@@ -45,8 +45,8 @@ class OptimizedCacheImage extends StatelessWidget {
   /// to clear the image from the [ImageCache].
   static Future evictFromCache(
     String url, {
-    String cacheKey,
-    BaseCacheManager cacheManager,
+    String? cacheKey,
+    BaseCacheManager? cacheManager,
     double scale = 1.0,
   }) async {
     cacheManager = cacheManager ?? DefaultCacheManager();
@@ -54,34 +54,34 @@ class OptimizedCacheImage extends StatelessWidget {
     return OptimizedCacheImageProvider(url, scale: scale).evict();
   }
 
-  OptimizedCacheImageProvider _image;
+  OptimizedCacheImageProvider? _image;
 
   /// Option to use cachemanager with other settings
-  final BaseCacheManager cacheManager;
+  final BaseCacheManager? cacheManager;
 
   /// The target image that is displayed.
   final String imageUrl;
 
   /// The target image's cache key.
-  final String cacheKey;
+  final String? cacheKey;
 
   /// Optional builder to further customize the display of the image.
-  final ImageWidgetBuilder imageBuilder;
+  final ImageWidgetBuilder? imageBuilder;
 
   /// Widget displayed while the target [imageUrl] is loading.
-  final PlaceholderWidgetBuilder placeholder;
+  final PlaceholderWidgetBuilder? placeholder;
 
   /// Widget displayed while the target [imageUrl] is loading.
-  final ProgressIndicatorBuilder progressIndicatorBuilder;
+  final ProgressIndicatorBuilder? progressIndicatorBuilder;
 
   /// Widget displayed while the target [imageUrl] failed loading.
-  final LoadingErrorWidgetBuilder errorWidget;
+  final LoadingErrorWidgetBuilder? errorWidget;
 
   /// The duration of the fade-in animation for the [placeholder].
-  final Duration placeholderFadeInDuration;
+  final Duration? placeholderFadeInDuration;
 
   /// The duration of the fade-out animation for the [placeholder].
-  final Duration fadeOutDuration;
+  final Duration? fadeOutDuration;
 
   /// The curve of the fade-out animation for the [placeholder].
   final Curve fadeOutCurve;
@@ -98,7 +98,7 @@ class OptimizedCacheImage extends StatelessWidget {
   /// aspect ratio. This may result in a sudden change if the size of the
   /// placeholder widget does not match that of the target image. The size is
   /// also affected by the scale factor.
-  final double width;
+  final double? width;
 
   /// If non-null, require the image to have this height.
   ///
@@ -106,13 +106,13 @@ class OptimizedCacheImage extends StatelessWidget {
   /// aspect ratio. This may result in a sudden change if the size of the
   /// placeholder widget does not match that of the target image. The size is
   /// also affected by the scale factor.
-  final double height;
+  final double? height;
 
   /// How to inscribe the image into the space allocated during layout.
   ///
   /// The default varies based on the other fields. See the discussion at
   /// [paintImage].
-  final BoxFit fit;
+  final BoxFit? fit;
 
   /// How to align the image within its bounds.
   ///
@@ -159,14 +159,14 @@ class OptimizedCacheImage extends StatelessWidget {
   final bool matchTextDirection;
 
   /// Optional headers for the http request of the image url
-  final Map<String, String> httpHeaders;
+  final Map<String, String>? httpHeaders;
 
   /// When set to true it will animate from the old image to the new image
   /// if the url changes.
   final bool useOldImageOnUrlChange;
 
   /// If non-null, this color is blended with each image pixel using [colorBlendMode].
-  final Color color;
+  final Color? color;
 
   /// Used to combine [color] with this image.
   ///
@@ -176,7 +176,7 @@ class OptimizedCacheImage extends StatelessWidget {
   /// See also:
   ///
   ///  * [BlendMode], which includes an illustration of the effect of each blend mode.
-  final BlendMode colorBlendMode;
+  final BlendMode? colorBlendMode;
 
   /// Target the interpolation quality for image scaling.
   ///
@@ -184,26 +184,26 @@ class OptimizedCacheImage extends StatelessWidget {
   final FilterQuality filterQuality;
 
   /// Will resize the image in memory to have a certain width using [ResizeImage]
-  final int memCacheWidth;
+  final int? memCacheWidth;
 
   /// Will resize the image in memory to have a certain height using [ResizeImage]
-  final int memCacheHeight;
+  final int? memCacheHeight;
 
   /// Will resize the image and store the resized image in the disk cache.
-  final int maxWidthDiskCache;
+  final int? maxWidthDiskCache;
 
   /// Will resize the image and store the resized image in the disk cache.
-  final int maxHeightDiskCache;
+  final int? maxHeightDiskCache;
 
-  final ImageRenderMethodForWeb imageRenderMethodForWeb;
+  final ImageRenderMethodForWeb? imageRenderMethodForWeb;
 
   /// OptimizedCacheImage shows a network image using a caching mechanism. It also
   /// provides support for a placeholder, showing an error and fading into the
   /// loaded image. Next to that it supports most features of a default Image
   /// widget.
   OptimizedCacheImage({
-    Key key,
-    @required this.imageUrl,
+    Key? key,
+    required this.imageUrl,
     this.httpHeaders,
     this.imageBuilder,
     this.placeholder,
@@ -231,16 +231,7 @@ class OptimizedCacheImage extends StatelessWidget {
     this.maxWidthDiskCache,
     this.maxHeightDiskCache,
     this.imageRenderMethodForWeb,
-  })  : assert(imageUrl != null),
-        assert(fadeOutDuration != null),
-        assert(fadeOutCurve != null),
-        assert(fadeInDuration != null),
-        assert(fadeInCurve != null),
-        assert(alignment != null),
-        assert(filterQuality != null),
-        assert(repeat != null),
-        assert(matchTextDirection != null),
-        super(key: key);
+  })  : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -270,9 +261,8 @@ class OptimizedCacheImage extends StatelessWidget {
             ? (constraints.maxHeight * ratio).toInt()
             : null;
       }
-      if (_image == null ||
-          _image.maxHeight != _constrainHeight ||
-          _image.maxWidth != _constrainHeight) {
+      if (_image ==null || _image?.maxHeight != _constrainHeight ||
+          _image?.maxWidth != _constrainHeight) {
         _image = OptimizedCacheImageProvider(
           imageUrl,
           headers: httpHeaders,
@@ -284,7 +274,7 @@ class OptimizedCacheImage extends StatelessWidget {
         );
       }
       return OctoImage(
-        image: _image,
+        image: _image!,
         imageBuilder: imageBuilder != null ? _octoImageBuilder : null,
         placeholderBuilder: octoPlaceholderBuilder,
         progressIndicatorBuilder: octoProgressIndicatorBuilder,
@@ -296,7 +286,7 @@ class OptimizedCacheImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        alignment: alignment,
+        alignment: alignment as Alignment?,
         repeat: repeat,
         matchTextDirection: matchTextDirection,
         color: color,
@@ -309,32 +299,32 @@ class OptimizedCacheImage extends StatelessWidget {
   }
 
   Widget _octoImageBuilder(BuildContext context, Widget child) {
-    return imageBuilder(context, _image);
+    return imageBuilder!(context, _image!);
   }
 
   Widget _octoPlaceholderBuilder(BuildContext context) {
-    return placeholder(context, imageUrl);
+    return placeholder!(context, imageUrl);
   }
 
   Widget _octoProgressIndicatorBuilder(
     BuildContext context,
-    ImageChunkEvent progress,
+    ImageChunkEvent? progress,
   ) {
-    int totalSize;
+    int? totalSize;
     var downloaded = 0;
     if (progress != null) {
       totalSize = progress.expectedTotalBytes;
       downloaded = progress.cumulativeBytesLoaded;
     }
-    return progressIndicatorBuilder(
+    return progressIndicatorBuilder!(
         context, imageUrl, DownloadProgress(imageUrl, totalSize, downloaded));
   }
 
   Widget _octoErrorBuilder(
     BuildContext context,
     Object error,
-    StackTrace stackTrace,
+    StackTrace? stackTrace,
   ) {
-    return errorWidget(context, imageUrl, error);
+    return errorWidget!(context, imageUrl, error);
   }
 }
