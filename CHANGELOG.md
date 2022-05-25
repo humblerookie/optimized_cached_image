@@ -1,3 +1,7 @@
+## 3.0.1
+
+* Avoid unnecessary null checks
+
 ## 3.0.0
 
 * Null safety and interim gif support.
@@ -8,8 +12,8 @@
 
 ## 2.0.1
 
-* Update to null safety package dependencies. OCI still needs to migrate code to respect null safety. Additionally fix
-  issue with hero widgets
+* Update to null safety package dependencies. OCI still needs to migrate code to respect null
+  safety. Additionally fix issue with hero widgets
 
 ## 2.0.0
 
@@ -21,7 +25,8 @@
 
 ## 2.0.0-dev.1
 
-* Update with flutter cache manager dependency and `CachedNetworkImage`. Introduces breaking api changes.
+* Update with flutter cache manager dependency and `CachedNetworkImage`. Introduces breaking api
+  changes.
 
 ## 1.0.0
 
@@ -33,8 +38,8 @@
 
 ## 1.0.0-beta
 
-* Prevent unnecessary downloads from happening by caching the image from the original url and resizing it for different
-  sizes.
+* Prevent unnecessary downloads from happening by caching the image from the original url and
+  resizing it for different sizes.
 
 ## 0.1.15
 
@@ -58,7 +63,8 @@
 
 ## 0.1.10
 
-* Migrate to latest apis in cache manager dependency. Now the stream fetching is done by default instead of via flag.
+* Migrate to latest apis in cache manager dependency. Now the stream fetching is done by default
+  instead of via flag.
 
 ## 0.1.9
 
@@ -74,7 +80,8 @@
 
 ## 0.1.6
 
-* Add experimental support for streamed downloading via `useHttpStream` flag which further reduces the memory footprint.
+* Add experimental support for streamed downloading via `useHttpStream` flag which further reduces
+  the memory footprint.
 
 ## 0.1.5
 
