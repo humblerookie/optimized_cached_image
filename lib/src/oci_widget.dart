@@ -253,7 +253,7 @@ class OptimizedCacheImage extends StatelessWidget {
       var _constrainHeight = height?.toInt() ?? maxHeightDiskCache;
 
       final ratio = MediaQuery.of(context).devicePixelRatio;
-      if (_constrainWidth == null && _constrainHeight == null) {
+      if (_constrainWidth == null || _constrainHeight == null) {
         _constrainWidth = constraints.maxWidth != double.infinity
             ? (constraints.maxWidth * ratio).toInt()
             : null;
