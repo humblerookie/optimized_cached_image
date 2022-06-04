@@ -1,5 +1,4 @@
 import 'package:optimized_cached_image/optimized_cached_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -249,18 +248,24 @@ class OptimizedCacheImage extends StatelessWidget {
     }
 
     return LayoutBuilder(builder: (ctx, constraints) {
-      var _constrainWidth = width?.toInt() ?? maxWidthDiskCache;
-      var _constrainHeight = height?.toInt() ?? maxHeightDiskCache;
+      int? _constrainWidth = width?.toInt() ?? maxWidthDiskCache;
+      int? _constrainHeight = height?.toInt() ?? maxHeightDiskCache;
 
-      final ratio = MediaQuery.of(context).devicePixelRatio;
       if (_constrainWidth == null && _constrainHeight == null) {
         _constrainWidth = constraints.maxWidth != double.infinity
-            ? (constraints.maxWidth * ratio).toInt()
+            ? constraints.maxWidth.toInt()
             : null;
         _constrainHeight = constraints.maxHeight != double.infinity
-            ? (constraints.maxHeight * ratio).toInt()
+            ? constraints.maxHeight.toInt()
             : null;
       }
+
+      final ratio = MediaQuery.of(context).devicePixelRatio;
+      _constrainWidth =
+          _constrainWidth != null ? (_constrainWidth * ratio).toInt() : null;
+      _constrainHeight =
+          _constrainHeight != null ? (_constrainHeight * ratio).toInt() : null;
+
       if (_image == null ||
           _image?.maxHeight != _constrainHeight ||
           _image?.maxWidth != _constrainHeight) {
