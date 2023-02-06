@@ -10,7 +10,7 @@ import '../../optimized_cached_image.dart';
 Future<ui.Codec> loadAsyncHtmlImage(
   OptimizedCacheImageProvider key,
   StreamController<ImageChunkEvent> chunkEvents,
-  DecoderCallback decode,
+  DecoderBufferCallback decode,
 ) {
   final resolved = Uri.base.resolve(key.url);
   // ignore: undefined_function

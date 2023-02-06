@@ -1,14 +1,15 @@
 import 'dart:async';
 import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
+import '../../optimized_cached_image.dart' show ImageRenderMethodForWeb;
 import '_load_async_web.dart';
 import 'multi_image_stream_completer.dart';
 import 'optimized_cached_image_provider.dart' as image_provider;
-import '../../optimized_cached_image.dart' show ImageRenderMethodForWeb;
 
 /// The dart:html implementation of [image_provider.OptimizedCacheImageProvider].
 class OptimizedCacheImageProvider
@@ -64,8 +65,10 @@ class OptimizedCacheImageProvider
   }
 
   @override
-  ImageStreamCompleter load(
-      image_provider.OptimizedCacheImageProvider key, DecoderCallback decode) {
+  ImageStreamCompleter loadBuffer(
+    image_provider.OptimizedCacheImageProvider key,
+    DecoderBufferCallback decode,
+  ) {
     final chunkEvents = StreamController<ImageChunkEvent>();
 
     return MultiImageStreamCompleter(
@@ -95,7 +98,7 @@ class OptimizedCacheImageProvider
   Stream<ui.Codec> _loadAsync(
     OptimizedCacheImageProvider key,
     StreamController<ImageChunkEvent> chunkEvents,
-    DecoderCallback decode,
+    DecoderBufferCallback decode,
   ) {
     switch (_imageRenderMethodForWeb) {
       case ImageRenderMethodForWeb.HttpGet:
@@ -103,14 +106,12 @@ class OptimizedCacheImageProvider
       case ImageRenderMethodForWeb.HtmlImage:
         return loadAsyncHtmlImage(key, chunkEvents, decode).asStream();
     }
-    throw UnsupportedError(
-        'ImageRenderMethod $_imageRenderMethodForWeb is not supported');
   }
 
   Stream<ui.Codec> _loadAsyncHttpGet(
     OptimizedCacheImageProvider key,
     StreamController<ImageChunkEvent> chunkEvents,
-    DecoderCallback decode,
+    DecoderBufferCallback decode,
   ) async* {
     assert(key == this);
     try {
@@ -125,7 +126,8 @@ class OptimizedCacheImageProvider
         }
         if (result is FileInfo) {
           var file = result.file;
-          var bytes = await file.readAsBytes();
+          var bytes =
+              await ImmutableBuffer.fromUint8List(await file.readAsBytes());
           var decoded = await decode(bytes);
           yield decoded;
         }
@@ -135,7 +137,7 @@ class OptimizedCacheImageProvider
       // have had a chance to track the key in the cache at all.
       // Schedule a microtask to give the cache a chance to add the key.
       scheduleMicrotask(() {
-        PaintingBinding.instance?.imageCache?.evict(key);
+        PaintingBinding.instance.imageCache.evict(key);
       });
 
       errorListener?.call();

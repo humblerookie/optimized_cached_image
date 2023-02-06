@@ -8,16 +8,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_cache_manager: ^3.0.0
+  flutter_cache_manager: ^3.3.0
   flutter_image_compress: ^1.1.0
   uuid: ^3.0.3
   http: ^0.13.1
   path_provider: ^2.0.1
   path: ^1.8.0
   pedantic: ^1.11.0
-  sprintf: ^6.0.0
+  sprintf: ^7.0.0
   octo_image: ^1.0.0
-  image: ^3.0.2
+  image: ^4.0.13
   file: ^6.1.0
 dev_dependencies:
   test: ^1.16.8
