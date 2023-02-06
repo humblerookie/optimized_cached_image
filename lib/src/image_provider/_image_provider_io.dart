@@ -1,15 +1,15 @@
 import 'dart:async' show Future, StreamController, scheduleMicrotask;
 import 'dart:ui' as ui show Codec;
+import 'dart:ui';
 
-import 'package:optimized_cached_image/src/cache/default_image_cache_manager.dart';
-import 'package:optimized_cached_image/src/cache/image_cache_manager.dart';
-
-import 'multi_image_stream_completer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:optimized_cached_image/src/cache/default_image_cache_manager.dart';
+import 'package:optimized_cached_image/src/cache/image_cache_manager.dart';
 
 import '../../optimized_cached_image.dart' show ImageRenderMethodForWeb;
+import 'multi_image_stream_completer.dart';
 import 'optimized_cached_image_provider.dart' as image_provider;
 
 /// IO implementation of the CachedNetworkImageProvider; the ImageProvider to
@@ -68,8 +68,10 @@ class OptimizedCacheImageProvider
   }
 
   @override
-  ImageStreamCompleter load(
-      image_provider.OptimizedCacheImageProvider key, DecoderCallback decode) {
+  ImageStreamCompleter loadBuffer(
+    image_provider.OptimizedCacheImageProvider key,
+    DecoderBufferCallback decode,
+  ) {
     final chunkEvents = StreamController<ImageChunkEvent>();
     return MultiImageStreamCompleter(
       codec: _loadAsync(key, chunkEvents, decode),
@@ -88,7 +90,7 @@ class OptimizedCacheImageProvider
   Stream<ui.Codec> _loadAsync(
     image_provider.OptimizedCacheImageProvider key,
     StreamController<ImageChunkEvent> chunkEvents,
-    DecoderCallback decode,
+    DecoderBufferCallback decode,
   ) async* {
     assert(key == this);
     try {
@@ -119,7 +121,8 @@ class OptimizedCacheImageProvider
         }
         if (result is FileInfo) {
           var file = result.file;
-          var bytes = await file.readAsBytes();
+          var bytes =
+              await ImmutableBuffer.fromUint8List(await file.readAsBytes());
           var decoded = await decode(bytes);
           yield decoded;
         }

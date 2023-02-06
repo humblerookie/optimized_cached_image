@@ -83,6 +83,6 @@ abstract class OptimizedCacheImageProvider
   int? get maxWidth;
 
   @override
-  ImageStreamCompleter load(
-      OptimizedCacheImageProvider key, DecoderCallback decode);
+  ImageStreamCompleter loadBuffer(
+      OptimizedCacheImageProvider key, DecoderBufferCallback decode);
 }
