@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui' as ui;
+
+import 'package:file/file.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:image/image.dart';
-import 'package:file/file.dart';
+
 import '../transformer/image_transformer.dart';
-import 'dart:ui' as ui;
 
 const supportedFileNames = ['jpg', 'jpeg', 'png', 'tga', 'gif', 'cur', 'ico'];
 mixin OicImageCacheManager on BaseCacheManager {

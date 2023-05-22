@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'globals.dart';
@@ -32,7 +31,7 @@ class InfoPage extends StatelessWidget {
                   '\n\n'
                   'Need help with integrating functionalities within your own '
                   'apps? Contact us at anvithv4@gmail.com',
-                  style: Theme.of(context).textTheme.bodyText1,
+                  style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
@@ -79,8 +78,9 @@ class InfoPage extends StatelessWidget {
   }
 
   Future<void> _launchURL(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
+    final uri = Uri.tryParse(url);
+    if (uri != null) {
+      await launchUrl(uri);
     } else {
       throw 'Could not launch $url';
     }
