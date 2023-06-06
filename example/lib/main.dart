@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 import 'template/globals.dart';
 
@@ -18,30 +17,26 @@ class HumblerookiePluginExample extends StatelessWidget {
     return MaterialApp(
       title: 'Humblerookie $pluginName',
       theme: ThemeData(
-        accentColor: Colors.white60,
-        backgroundColor: const Color.fromRGBO(48, 49, 60, 0.8),
         buttonTheme: ButtonThemeData(
           buttonColor: themeMaterialColor.shade500,
           disabledColor: themeMaterialColor.withRed(200),
           splashColor: themeMaterialColor.shade50,
           textTheme: ButtonTextTheme.primary,
         ),
-        bottomAppBarColor: const Color.fromRGBO(57, 58, 71, 1),
         hintColor: themeMaterialColor.shade500,
-        primarySwatch: createMaterialColor(const Color.fromRGBO(48, 49, 60, 1)),
         textTheme: TextTheme(
-          bodyText1: TextStyle(
+          bodyLarge: TextStyle(
             color: Colors.white,
             fontSize: 16,
             height: 1.3,
           ),
-          bodyText2: TextStyle(
+          bodyMedium: TextStyle(
             color: Colors.white,
             fontSize: 18,
             height: 1.2,
           ),
-          button: TextStyle(color: Colors.white),
-          headline1: TextStyle(
+          labelLarge: TextStyle(color: Colors.white),
+          displayLarge: TextStyle(
             color: Colors.white,
             fontSize: 18,
           ),
@@ -51,6 +46,13 @@ class HumblerookiePluginExample extends StatelessWidget {
           fillColor: Color.fromRGBO(37, 37, 37, 1),
           filled: true,
         ),
+        bottomAppBarTheme:
+            BottomAppBarTheme(color: const Color.fromRGBO(57, 58, 71, 1)),
+        colorScheme: ColorScheme.fromSwatch(
+                primarySwatch:
+                    createMaterialColor(const Color.fromRGBO(48, 49, 60, 1)))
+            .copyWith(background: const Color.fromRGBO(48, 49, 60, 0.8))
+            .copyWith(secondary: Colors.white60),
       ),
       home: AppHome(title: 'Baseflow $pluginName example app'),
     );
@@ -99,12 +101,12 @@ class _AppHomeState extends State<AppHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).bottomAppBarColor,
+        backgroundColor: Theme.of(context).bottomAppBarTheme.color,
         title: Center(
           child: Text("OptimizedCachedImage"),
         ),
       ),
-      backgroundColor: Theme.of(context).backgroundColor,
+      backgroundColor: Theme.of(context).colorScheme.background,
       body: PageView(
         controller: _pageController,
         children: pages,
@@ -121,7 +123,7 @@ class _AppHomeState extends State<AppHome> {
   BottomAppBar _bottomAppBar() {
     return BottomAppBar(
       elevation: 5,
-      color: Theme.of(context).bottomAppBarColor,
+      color: Theme.of(context).bottomAppBarTheme.color,
       child: Row(
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -147,6 +149,8 @@ class _AppHomeState extends State<AppHome> {
   }
 
   Color _bottomAppBarIconColor(int page) {
-    return _currentPage == page ? Colors.white : Theme.of(context).accentColor;
+    return _currentPage == page
+        ? Colors.white
+        : Theme.of(context).colorScheme.secondary;
   }
 }

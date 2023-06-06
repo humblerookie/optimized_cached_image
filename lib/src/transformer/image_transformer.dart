@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
+
 import 'package:file/local.dart' as fileIo;
 import 'package:flutter_cache_manager/flutter_cache_manager.dart' show FileInfo;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'scale_info.dart';
 import 'package:path/path.dart' as p;
 import 'package:sprintf/sprintf.dart';
 
 import '../debug_tools.dart';
+import 'scale_info.dart';
 
 class DefaultImageTransformer extends ImageTransformer {
   DefaultImageTransformer();

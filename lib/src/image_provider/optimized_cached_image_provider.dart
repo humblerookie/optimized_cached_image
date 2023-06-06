@@ -45,7 +45,7 @@ abstract class OptimizedCacheImageProvider
     String? cacheKey,
     double scale,
     @Deprecated('ErrorListener is deprecated, use listeners on the imagestream')
-        ErrorListener? errorListener,
+    ErrorListener? errorListener,
     Map<String, String>? headers,
     BaseCacheManager? cacheManager,
     ImageRenderMethodForWeb? imageRenderMethodForWeb,
@@ -83,6 +83,6 @@ abstract class OptimizedCacheImageProvider
   int? get maxWidth;
 
   @override
-  ImageStreamCompleter loadBuffer(
-      OptimizedCacheImageProvider key, DecoderBufferCallback decode);
+  ImageStreamCompleter loadImage(
+      OptimizedCacheImageProvider key, ImageDecoderCallback decode);
 }
