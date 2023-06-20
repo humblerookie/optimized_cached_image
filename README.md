@@ -2,6 +2,10 @@
 
 [![pub package](https://img.shields.io/pub/v/optimized_cached_image.svg)](https://pub.dartlang.org/packages/optimized_cached_image)
 
+### ❌❌ Important Update ❌❌ ###
+This library is no longer being maintained. When I started this library, it was meant to add memory performant extensions which could not be directly added into the parent library. Since then a lot has changed, [the parent library](https://github.com/Baseflow/flutter_cached_network_image) has incorporated similar changes, perhaps with the exception of a trivial `LayoutBuilder` that auto detects image sizes. I feel like this is a good time to deprecate this library in favour of the [parent](https://github.com/Baseflow/flutter_cached_network_image).
+
+## Description
 A flutter library for loading images from network, resizing and caching them for memory sensitivity.
 This resizes and stores the images in cache based on parent container constraints and hence
 loads images of lower size into memory. This is heavily inspired by [cached_network_image](https://pub.dev/packages/cached_network_image) library.
